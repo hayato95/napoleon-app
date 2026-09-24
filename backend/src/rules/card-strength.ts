@@ -6,7 +6,7 @@ import type { Card, Rank, Suit } from "../types.js";
 // 見る必要があるため、この関数には含めず、トリック勝者決定(#25)側で別途チェックする想定。
 export const CARD_STRENGTH_TIER = {
   mighty: 1, // オールマイティ（♠A）
-  leadingJoker: 2, // 台札のジョーカー（トリックの先頭でジョーカーが出された）
+  joker: 2, // ジョーカー（台札かどうかに関係なく常に2番目に強い）
   correctJack: 3, // 正ジャック（切り札のJ）
   backJack: 4, // 裏ジャック（切り札と同じ色のもう一方のJ）
   trump: 5, // 切り札（A〜2、正ジャック・裏ジャックを除く）
@@ -44,7 +44,6 @@ const SAME_COLOR_SUIT: Record<Suit, Suit> = {
 export interface CardStrengthContext {
   trumpSuit: Suit;
   leadSuit: Suit;
-  isLeadCard: boolean; // このカードがそのトリックの先頭で出されたか
 }
 
 export interface CardStrength {
@@ -53,16 +52,14 @@ export interface CardStrength {
 }
 
 export function getCardStrength(card: Card, context: CardStrengthContext): CardStrength {
-  const { trumpSuit, leadSuit, isLeadCard } = context;
+  const { trumpSuit, leadSuit } = context;
 
   if (card.type === "normal" && card.suit === "spade" && card.rank === "A") {
     return { tier: CARD_STRENGTH_TIER.mighty, numberStrength: 0 };
   }
 
   if (card.type === "joker") {
-    return isLeadCard
-      ? { tier: CARD_STRENGTH_TIER.leadingJoker, numberStrength: 0 }
-      : { tier: CARD_STRENGTH_TIER.other, numberStrength: 0 };
+    return { tier: CARD_STRENGTH_TIER.joker, numberStrength: 0 };
   }
 
   if (card.rank === "J" && card.suit === trumpSuit) {

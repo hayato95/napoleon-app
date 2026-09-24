@@ -8,7 +8,7 @@ function card(suit: Suit, rank: Rank): Card {
 
 const joker: Card = { type: "joker" };
 
-const baseContext = { trumpSuit: "diamond" as const, leadSuit: "heart" as const, isLeadCard: false };
+const baseContext = { trumpSuit: "diamond" as const, leadSuit: "heart" as const };
 
 describe("getCardStrength", () => {
   it("スペードのAはオールマイティ(tier1)、切り札やリードスートと無関係に最強", () => {
@@ -17,16 +17,10 @@ describe("getCardStrength", () => {
     expect(strength.tier).toBe(CARD_STRENGTH_TIER.mighty);
   });
 
-  it("先頭で出されたジョーカーはtier2(台札のジョーカー)", () => {
-    const strength = getCardStrength(joker, { ...baseContext, isLeadCard: true });
+  it("ジョーカーは台札かどうかに関係なく常にtier2", () => {
+    const strength = getCardStrength(joker, baseContext);
 
-    expect(strength.tier).toBe(CARD_STRENGTH_TIER.leadingJoker);
-  });
-
-  it("先頭でないジョーカーはtier8(その他)", () => {
-    const strength = getCardStrength(joker, { ...baseContext, isLeadCard: false });
-
-    expect(strength.tier).toBe(CARD_STRENGTH_TIER.other);
+    expect(strength.tier).toBe(CARD_STRENGTH_TIER.joker);
   });
 
   it("切り札スートのJは正ジャック(tier3)", () => {
@@ -44,9 +38,9 @@ describe("getCardStrength", () => {
 
   it("正ジャック・裏ジャック以外のJで、そのスートがリードスートなら普通のカードとしてtier7になる", () => {
     // 切り札diamond、リードclub -> clubのJは正ジャックでも裏ジャックでもない普通のカード
-    const strength = getCardStrength(card("club", "J"), { trumpSuit: "diamond", leadSuit: "club", isLeadCard: false });
-    const clubTen = getCardStrength(card("club", 10), { trumpSuit: "diamond", leadSuit: "club", isLeadCard: false });
-    const clubQueen = getCardStrength(card("club", "Q"), { trumpSuit: "diamond", leadSuit: "club", isLeadCard: false });
+    const strength = getCardStrength(card("club", "J"), { trumpSuit: "diamond", leadSuit: "club" });
+    const clubTen = getCardStrength(card("club", 10), { trumpSuit: "diamond", leadSuit: "club" });
+    const clubQueen = getCardStrength(card("club", "Q"), { trumpSuit: "diamond", leadSuit: "club" });
 
     expect(strength.tier).toBe(CARD_STRENGTH_TIER.leadSuit);
     expect(strength.numberStrength).toBeGreaterThan(clubTen.numberStrength);
@@ -83,7 +77,7 @@ describe("getCardStrength", () => {
 
   it("切り札がそのままリードスートでもある場合、tier5(切り札)が優先される", () => {
     // 切り札diamond、リードもdiamond -> diamondのカードはtier7ではなくtier5になるべき
-    const strength = getCardStrength(card("diamond", "K"), { trumpSuit: "diamond", leadSuit: "diamond", isLeadCard: true });
+    const strength = getCardStrength(card("diamond", "K"), { trumpSuit: "diamond", leadSuit: "diamond" });
 
     expect(strength.tier).toBe(CARD_STRENGTH_TIER.trump);
   });
