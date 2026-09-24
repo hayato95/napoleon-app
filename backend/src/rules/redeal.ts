@@ -17,6 +17,6 @@ export function shouldRedeal(declarations: Declaration[]): boolean {
   // 最初の一周（先頭から5件）を取り出す
   const firstRound = declarations.slice(0, PLAYER_COUNT);
 
-  // その5件が全部パス（count が null）なら配り直し
+  // その5件が全部パス（declaredCardCount が null）なら配り直し
  return firstRound.every((declaration) => declaration.declaredCardCount === null);
 }
