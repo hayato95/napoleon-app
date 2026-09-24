@@ -28,7 +28,7 @@ export function submitDeclaration(
 }
 
 // パスを除いた、直近の宣言を探す（見つからなければ null = まだ誰も宣言していない）
-function findLatestDeclaration(declarations: Declaration[]): Declaration | null {
+export function findLatestDeclaration(declarations: Declaration[]): Declaration | null {
   for (let i = declarations.length - 1; i >= 0; i--) {
     if (declarations[i].declaredCardCount !== null) {
       return declarations[i];
