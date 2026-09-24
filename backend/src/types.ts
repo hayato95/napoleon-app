@@ -28,7 +28,7 @@ export interface Player {
 export interface Declaration {
   playerId: PlayerId;
   suit: Suit | null; // ノートランプ（FR-08）は今回未実装だが型としては残す
-  count: number | null; // null = パス
+  declaredCardCount: number | null; // null = パス（GameState.declaredCountは確定後の値なので区別している）
 }
 
 // --- トリック ---
