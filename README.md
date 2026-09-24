@@ -98,6 +98,56 @@ napoleon-app/
     └── ci.yml         # lint・型チェック・build・ユニットテストの自動実行
 ```
 
+## 環境構築（初心者向け）
+
+このプロジェクトに初めて参加する人向けの、手元のPCに必要なツールを揃える手順。1回やれば済む作業なので、慣れてる人は「前提条件」だけ見れば十分です。
+
+### 前提条件
+
+- **Node.js 24以上**（`.nvmrc`に記載）
+- npm（Node.js同梱のもので可）
+
+### 1. Node.jsをインストールする
+
+バージョン管理ツール（nvm等）経由でのインストールを推奨。OSを直接インストールすると、後でチームの指定バージョンとズレたときに困る。
+
+**Mac / Linux（nvm）**
+
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+# ターミナルを開き直すか、以下を実行
+source ~/.bashrc  # または ~/.zshrc
+
+cd napoleon-app  # このリポジトリのルートで
+nvm install  # .nvmrcを見て自動的にNode 24系をインストール
+nvm use
+```
+
+**Windows（nvm-windows）**
+
+1. [nvm-windows](https://github.com/coreybutler/nvm-windows/releases)から`nvm-setup.exe`をダウンロードしてインストール
+2. PowerShellまたはコマンドプロンプトを開き直して実行：
+
+```powershell
+nvm install 24
+nvm use 24
+```
+
+**OSを問わず: Volta**
+
+```bash
+curl https://get.volta.sh | bash  # Windowsは https://volta.sh/ の手順に従う
+cd napoleon-app
+volta install node@24
+```
+
+### 2. インストールできたか確認する
+
+```bash
+node -v   # v24.x.x と表示されればOK
+npm -v
+```
+
 ## セットアップ
 
 ```bash

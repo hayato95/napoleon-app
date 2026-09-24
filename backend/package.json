@@ -14,13 +14,16 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "engines": {
+    "node": ">=24"
+  },
   "dependencies": {
     "cors": "^2.8.6",
     "socket.io": "^4.8.3"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
-    "@types/node": "^26.6.2",
+    "@types/node": "^24.13.6",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vitest": "^5.0.1"
