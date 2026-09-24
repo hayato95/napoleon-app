@@ -26,6 +26,12 @@ describe("determineNapoleon", () => {
     expect(determineNapoleon(declarations)).toBeNull();
   });
 
+  it("あと1人パスすればせり終了という境界(3人パス)でもまだnull", () => {
+    const declarations = [declare(0, "spade", 12), pass(1), pass(2), pass(3)];
+
+    expect(determineNapoleon(declarations)).toBeNull();
+  });
+
   it("宣言の後、残り4人全員が連続パスしたらナポレオンが確定する", () => {
     const declarations = [declare(0, "spade", 12), pass(1), pass(2), pass(3), pass(4)];
 
