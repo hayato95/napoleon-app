@@ -15,8 +15,9 @@ export const CARD_STRENGTH_TIER = {
   other: 8, // その他
 } as const;
 
-// 数字の強さ。Jはtier3/4/8のいずれかで別扱いになるためここには含めない。
-const NUMBER_STRENGTH: Record<Exclude<Rank, "J">, number> = {
+// 数字の強さ。正ジャック・裏ジャックはtier3/4で別扱いだが、それ以外のJは
+// 普通のカードとして自分のスートの中で10とQの間の強さを持つ（実際のナポレオンのルール通り）。
+const NUMBER_STRENGTH: Record<Rank, number> = {
   2: 2,
   3: 3,
   4: 4,
@@ -26,6 +27,7 @@ const NUMBER_STRENGTH: Record<Exclude<Rank, "J">, number> = {
   8: 8,
   9: 9,
   10: 10,
+  J: 11,
   Q: 12,
   K: 13,
   A: 14,
@@ -63,17 +65,16 @@ export function getCardStrength(card: Card, context: CardStrengthContext): CardS
       : { tier: CARD_STRENGTH_TIER.other, numberStrength: 0 };
   }
 
-  if (card.rank === "J") {
-    if (card.suit === trumpSuit) {
-      return { tier: CARD_STRENGTH_TIER.correctJack, numberStrength: 0 };
-    }
-    if (card.suit === SAME_COLOR_SUIT[trumpSuit]) {
-      return { tier: CARD_STRENGTH_TIER.backJack, numberStrength: 0 };
-    }
-    // 正ジャック・裏ジャック以外のJには特別な強さがない
-    return { tier: CARD_STRENGTH_TIER.other, numberStrength: 0 };
+  if (card.rank === "J" && card.suit === trumpSuit) {
+    return { tier: CARD_STRENGTH_TIER.correctJack, numberStrength: 0 };
   }
 
+  if (card.rank === "J" && card.suit === SAME_COLOR_SUIT[trumpSuit]) {
+    return { tier: CARD_STRENGTH_TIER.backJack, numberStrength: 0 };
+  }
+
+  // 正ジャック・裏ジャック以外のJは、ここから先の通常のスート判定に合流する
+  // （自分のスートの中では普通のカードとして10とQの間の強さを持つ）
   if (card.suit === trumpSuit) {
     return { tier: CARD_STRENGTH_TIER.trump, numberStrength: NUMBER_STRENGTH[card.rank] };
   }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Card, Rank, Suit } from "../types.js";
-import { CARD_STRENGTH_TIER, getCardStrength } from "./cardStrength.js";
+import { CARD_STRENGTH_TIER, getCardStrength } from "./card-strength.js";
 
 function card(suit: Suit, rank: Rank): Card {
   return { type: "normal", suit, rank };
@@ -42,8 +42,19 @@ describe("getCardStrength", () => {
     expect(strength.tier).toBe(CARD_STRENGTH_TIER.backJack);
   });
 
-  it("正ジャック・裏ジャック以外のJはtier8(その他)", () => {
-    // 切り札diamond、同色heart以外(spade/club)のJは特別な強さを持たない
+  it("正ジャック・裏ジャック以外のJで、そのスートがリードスートなら普通のカードとしてtier7になる", () => {
+    // 切り札diamond、リードclub -> clubのJは正ジャックでも裏ジャックでもない普通のカード
+    const strength = getCardStrength(card("club", "J"), { trumpSuit: "diamond", leadSuit: "club", isLeadCard: false });
+    const clubTen = getCardStrength(card("club", 10), { trumpSuit: "diamond", leadSuit: "club", isLeadCard: false });
+    const clubQueen = getCardStrength(card("club", "Q"), { trumpSuit: "diamond", leadSuit: "club", isLeadCard: false });
+
+    expect(strength.tier).toBe(CARD_STRENGTH_TIER.leadSuit);
+    expect(strength.numberStrength).toBeGreaterThan(clubTen.numberStrength);
+    expect(strength.numberStrength).toBeLessThan(clubQueen.numberStrength);
+  });
+
+  it("正ジャック・裏ジャック以外のJで、切り札でもリードスートでもなければtier8(その他)", () => {
+    // 切り札diamond、リードheart -> spadeのJはどちらにも当てはまらない
     const strength = getCardStrength(card("spade", "J"), baseContext);
 
     expect(strength.tier).toBe(CARD_STRENGTH_TIER.other);
@@ -68,5 +79,12 @@ describe("getCardStrength", () => {
     const strength = getCardStrength(card("club", "K"), baseContext);
 
     expect(strength.tier).toBe(CARD_STRENGTH_TIER.other);
+  });
+
+  it("切り札がそのままリードスートでもある場合、tier5(切り札)が優先される", () => {
+    // 切り札diamond、リードもdiamond -> diamondのカードはtier7ではなくtier5になるべき
+    const strength = getCardStrength(card("diamond", "K"), { trumpSuit: "diamond", leadSuit: "diamond", isLeadCard: true });
+
+    expect(strength.tier).toBe(CARD_STRENGTH_TIER.trump);
   });
 });
