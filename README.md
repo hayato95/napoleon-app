@@ -98,6 +98,13 @@ napoleon-app/
     └── ci.yml         # lint・型チェック・build・ユニットテストの自動実行
 ```
 
+## 前提条件
+
+- **Node.js 24以上**（`.nvmrc`に記載。[nvm](https://github.com/nvm-sh/nvm)や[Volta](https://volta.sh/)を使ってる場合は、リポジトリのルートで`nvm use`（または相当のコマンド）を実行するとバージョンを合わせられる）
+- npm（Node.js同梱のもので可）
+- Git
+- （任意）[GitHub CLI (`gh`)](https://cli.github.com/)：Issue・PR操作をCLIで行う場合
+
 ## セットアップ
 
 ```bash
