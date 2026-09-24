@@ -1,4 +1,4 @@
-import type { Declaration } from "./types.js";
+import type { Declaration } from "../types.js";
 
 // プレイヤー人数（本アプリは5人固定）
 const PLAYER_COUNT = 5;
@@ -18,5 +18,5 @@ export function shouldRedeal(declarations: Declaration[]): boolean {
   const firstRound = declarations.slice(0, PLAYER_COUNT);
 
   // その5件が全部パス（count が null）なら配り直し
-  return firstRound.every((declaration) => declaration.count === null);
+ return firstRound.every((declaration) => declaration.declaredCardCount === null);
 }

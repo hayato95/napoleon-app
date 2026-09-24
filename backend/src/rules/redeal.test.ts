@@ -1,18 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { shouldRedeal } from "./redeal.js";
-import type { Declaration, PlayerId, Suit } from "./types.js";
+import type { Declaration, PlayerId, Suit } from "../types.js";
 
 // --- テスト用の小さな道具 ---
 // 毎回 { playerId: 0, suit: null, count: null } と書くのは大変なので、短く書けるようにする
 const pass = (playerId: PlayerId): Declaration => ({
   playerId,
   suit: null,
-  count: null, // null = パス（types.tsの決まり）
+    declaredCardCount: null, // null = パス（types.tsの決まり）
 });
 const declare = (playerId: PlayerId, suit: Suit, count: number): Declaration => ({
   playerId,
   suit,
-  count,
+  declaredCardCount: count,
 });
 
 describe("FR-05: shouldRedeal（全員パスなら配り直し）", () => {
