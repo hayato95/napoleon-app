@@ -1,6 +1,6 @@
 import { createServer } from "node:http";
 import { Server } from "socket.io";
-import type { Card, Suit, Rank, Player, GameState, PlayerId } from "./types";
+import type { Card, Suit, Rank, Player, GameState, PlayerId } from "./types.js";
 
 function createDeck(): Card[] {
   const deck: Card[] = [];
@@ -117,11 +117,9 @@ const io = new Server(httpServer, {
   },
 });
 
-let gameState = setupDeal();
-
-const connectedPlayers = new Map<string, PlayerId>();
-
 io.on("connection", (socket) => {
+
+
   console.log(`client connected: ${socket.id}`);
 
 if (connectedPlayers.size >= 5) {
