@@ -83,7 +83,7 @@ const gameState: GameState = {
   declaredCount: null,
 
   napoleonId: null,
-  designatedCard: null,
+  fukukanCard: null,
   fukukanId: null,
   fukukanRevealed: false,
 
