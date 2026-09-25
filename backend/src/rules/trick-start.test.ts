@@ -117,6 +117,15 @@ describe("playLeadCard", () => {
     expect(() => playLeadCard(state, 1, HEART_QUEEN)).toThrow();
   });
 
+  it("トリックフェーズ以外ではエラー", () => {
+    const state = createState({
+      phase: "cardExchange",
+      players: PLAYER_IDS.map((id) => createPlayer(id, id === 0 ? [HEART_QUEEN] : [])),
+    });
+
+    expect(() => playLeadCard(state, 0, HEART_QUEEN)).toThrow();
+  });
+
   it("手札に無いカードは出せない", () => {
     const state = createState({
       players: PLAYER_IDS.map((id) => createPlayer(id, id === 0 ? [SPADE_KING] : [])),

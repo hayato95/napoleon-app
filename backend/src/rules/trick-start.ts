@@ -22,6 +22,10 @@ function determineLeaderId(state: GameState): PlayerId | null {
 // FR-16のスコープ: リードプレイヤーが手札から自由に1枚選んで、そのトリックの最初の1枚として出す。
 // マストフォロー(FR-17)・トリック勝者決定(FR-19)は後続issueの責務として分離している。
 export function playLeadCard(state: GameState, playerId: PlayerId, card: Card): GameState {
+  if (state.phase !== "trick") {
+    throw new Error("トリックフェーズ以外ではカードを出せません");
+  }
+
   if (state.currentTrick !== null) {
     throw new Error("前のトリックが終わっていません");
   }
