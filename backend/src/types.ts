@@ -63,7 +63,7 @@ export interface GameState {
   declaredCount: number | null; // 確定した宣言枚数
 
   napoleonId: PlayerId | null;
-  designatedCard: Card | null; // 副官指定カード
+  fukukanCard: Card | null; // 副官指定カード
   fukukanId: PlayerId | null; // 本人以外に見せてはいけない（FR-10）
   fukukanRevealed: boolean; // FR-12で公開されたらtrue
 
