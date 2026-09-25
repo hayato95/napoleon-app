@@ -17,7 +17,7 @@ function createState(): GameState {
     trumpSuit: null,
     declaredCount: null,
     napoleonId: null,
-    designatedCard: null,
+    fukukanCard: null,
     fukukanId: null,
     fukukanRevealed: false,
     currentTrick: null,
