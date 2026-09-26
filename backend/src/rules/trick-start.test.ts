@@ -134,4 +134,28 @@ describe("playLeadCard", () => {
 
     expect(() => playLeadCard(state, 0, HEART_QUEEN)).toThrow();
   });
+
+  it("リードで副官指定カードを出すと、副官が公開される(FR-12)", () => {
+    const state = createState({
+      fukukanCard: HEART_QUEEN,
+      fukukanId: 3,
+      players: PLAYER_IDS.map((id) => createPlayer(id, id === 0 ? [HEART_QUEEN] : [])),
+    });
+
+    const result = playLeadCard(state, 0, HEART_QUEEN);
+
+    expect(result.fukukanRevealed).toBe(true);
+  });
+
+  it("副官指定カード以外をリードしても、副官は公開されない(FR-12)", () => {
+    const state = createState({
+      fukukanCard: HEART_QUEEN,
+      fukukanId: 3,
+      players: PLAYER_IDS.map((id) => createPlayer(id, id === 0 ? [SPADE_KING] : [])),
+    });
+
+    const result = playLeadCard(state, 0, SPADE_KING);
+
+    expect(result.fukukanRevealed).toBe(false);
+  });
 });

@@ -1,4 +1,5 @@
 import type { Card, GameState, PlayerId, Trick } from "../types.js";
+import { revealFukukanIfPlayed } from "./fukukan-reveal.js";
 
 // カードは一意なIDを持たない値オブジェクトなので、手札の中から「そのカード」を
 // 探すには値そのもの(type/suit/rank)で比較する必要がある。デッキ内に同じカードは
@@ -45,11 +46,13 @@ export function playLeadCard(state: GameState, playerId: PlayerId, card: Card): 
     plays: [{ playerId, card }],
   };
 
-  return {
+  const nextState: GameState = {
     ...state,
     players: state.players.map((p) =>
       p.id === playerId ? { ...p, hand: p.hand.filter((handCard) => !cardsEqual(handCard, card)) } : p,
     ),
     currentTrick: newTrick,
   };
+
+  return revealFukukanIfPlayed(nextState, card);
 }
