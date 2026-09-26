@@ -63,6 +63,18 @@ function createPlayers(): Player[] {
   ];
 }
 
+function giveWidowToNapoleon(gameState: GameState): void {
+  if (gameState.napoleonId === null) {
+    return;
+  }
+
+  const napoleon = gameState.players[gameState.napoleonId];
+
+  napoleon.hand.push(...gameState.widow);
+  gameState.widow = [];
+}
+
+
 function setupDeal(): GameState {
 const deck = shuffleDeck(createDeck());
 const { hands, widow } = dealCards(deck);
@@ -85,6 +97,7 @@ const gameState: GameState = {
   napoleonId: null,
   fukukanCard: null,
   fukukanId: null,
+  hitoridachi: false,
   fukukanRevealed: false,
 
   currentTrick: null,
@@ -144,6 +157,49 @@ socket.emit("yourHand", {
 });
 
   console.log(`Player ${playerId} として接続しました`);
+
+socket.on("napoleonSelected", (data: { playerId: PlayerId }) => {
+  gameState.napoleonId = data.playerId;
+
+  giveWidowToNapoleon(gameState);
+
+  socket.emit("napoleonHand", {
+    playerId: data.playerId,
+    hand: gameState.players[data.playerId].hand,
+  });
+});
+
+socket.on(
+  "discardCards",
+  (data: { cardIndexes: number[] }) => {
+    if (gameState.napoleonId === null) {
+      return;
+    }
+
+    if (data.cardIndexes.length !== 3) {
+      return;
+    }
+
+    const napoleon = gameState.players[gameState.napoleonId];
+
+    const indexes = [...data.cardIndexes].sort((a, b) => b - a);
+
+    for (const index of indexes) {
+      if (index < 0 || index >= napoleon.hand.length) {
+        return;
+      }
+    }
+
+    for (const index of indexes) {
+      napoleon.hand.splice(index, 1);
+    }
+
+    socket.emit("handAfterDiscard", {
+      playerId: gameState.napoleonId,
+      hand: napoleon.hand,
+    });
+  },
+);
 
   socket.on("disconnect", () => {
     console.log(`client disconnected: ${socket.id}`);
