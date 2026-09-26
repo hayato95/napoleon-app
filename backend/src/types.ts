@@ -64,7 +64,8 @@ export interface GameState {
 
   napoleonId: PlayerId | null;
   fukukanCard: Card | null; // 副官指定カード
-  fukukanId: PlayerId | null; // 本人以外に見せてはいけない（FR-10）
+  fukukanId: PlayerId | null; // 本人以外に見せてはいけない（FR-10）。未確定、または独り立ちのときはnull
+  hitoridachi: boolean; // 独り立ち（指定カードを4人の誰も持っておらず、ナポレオンが1対4で戦う）ならtrue。ナポレオン以外に見せてはいけない（FR-10）
   fukukanRevealed: boolean; // FR-12で公開されたらtrue
 
   currentTrick: Trick | null;

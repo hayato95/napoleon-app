@@ -97,6 +97,7 @@ const gameState: GameState = {
   napoleonId: null,
   fukukanCard: null,
   fukukanId: null,
+  hitoridachi: false,
   fukukanRevealed: false,
 
   currentTrick: null,

@@ -3,7 +3,7 @@ import type { Card, GameState, PlayerId, Trick } from "../types.js";
 // カードは一意なIDを持たない値オブジェクトなので、手札の中から「そのカード」を
 // 探すには値そのもの(type/suit/rank)で比較する必要がある。デッキ内に同じカードは
 // 1枚しかないため、この比較で十分に一意なカードを特定できる。
-function cardsEqual(a: Card, b: Card): boolean {
+export function cardsEqual(a: Card, b: Card): boolean {
   if (a.type === "normal" && b.type === "normal") {
     return a.suit === b.suit && a.rank === b.rank;
   }
