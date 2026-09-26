@@ -109,6 +109,7 @@ const gameState: GameState = {
     3: [],
     4: []
   },
+  discardedCards: [],
 
   turnOrder: [0, 1, 2, 3, 4]
 };

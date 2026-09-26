@@ -31,6 +31,7 @@ function createState(overrides: Partial<GameState> = {}): GameState {
     currentTrick: null,
     trickHistory: [],
     capturedCards: { 0: [], 1: [], 2: [], 3: [], 4: [] },
+    discardedCards: [],
     turnOrder: [0, 1, 2, 3, 4],
     ...overrides,
   };
