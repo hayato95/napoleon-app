@@ -41,6 +41,7 @@ export interface Trick {
   leaderId: PlayerId;
   plays: TrickPlay[]; // 出された順
   winnerId?: PlayerId; // 決着後にセット
+  leadJokerSuit?: Suit; // 親がジョーカーでリードしたときに指定した台札のスート（FR-23）。それ以外のトリックでは無い
 }
 
 // --- ゲーム全体の進行フェーズ ---

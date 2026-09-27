@@ -66,9 +66,50 @@ describe("playLeadCard", () => {
       players: PLAYER_IDS.map((id) => createPlayer(id, id === 0 ? [JOKER] : [])),
     });
 
-    const result = playLeadCard(state, 0, JOKER);
+    const result = playLeadCard(state, 0, JOKER, "heart"); // FR-23でジョーカーのリードはスート指定が必須になったため指定を追加
 
     expect(result.currentTrick?.plays[0].card).toEqual(JOKER);
+  });
+
+  it("FR-23: ジョーカーでリードしたとき、指定したスートがトリックに保存される", () => {
+    const state = createState({
+      players: PLAYER_IDS.map((id) => createPlayer(id, id === 0 ? [JOKER, SPADE_KING] : [])),
+    });
+
+    const result = playLeadCard(state, 0, JOKER, "diamond");
+
+    expect(result.currentTrick).toEqual({
+      leaderId: 0,
+      plays: [{ playerId: 0, card: JOKER }],
+      leadJokerSuit: "diamond",
+    });
+    expect(result.players[0].hand).toEqual([SPADE_KING]);
+  });
+
+  it("FR-23: ジョーカーでリードしてスートを指定しないとエラー", () => {
+    const state = createState({
+      players: PLAYER_IDS.map((id) => createPlayer(id, id === 0 ? [JOKER] : [])),
+    });
+
+    expect(() => playLeadCard(state, 0, JOKER)).toThrow();
+  });
+
+  it("FR-23: 普通のカードでリードしてスートを指定するとエラー", () => {
+    const state = createState({
+      players: PLAYER_IDS.map((id) => createPlayer(id, id === 0 ? [HEART_QUEEN] : [])),
+    });
+
+    expect(() => playLeadCard(state, 0, HEART_QUEEN, "spade")).toThrow();
+  });
+
+  it("FR-23: 普通のカードでリードしたトリックには leadJokerSuit が無い", () => {
+    const state = createState({
+      players: PLAYER_IDS.map((id) => createPlayer(id, id === 0 ? [HEART_QUEEN] : [])),
+    });
+
+    const result = playLeadCard(state, 0, HEART_QUEEN);
+
+    expect(result.currentTrick?.leadJokerSuit).toBeUndefined();
   });
 
   it("最初のトリックでナポレオン以外がリードしようとするとエラー", () => {
