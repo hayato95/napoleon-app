@@ -119,6 +119,28 @@ describe("submitDeclaration", () => {
   });
 });
 
+describe("submitDeclaration（FR-07: 宣言枚数の範囲チェック）", () => {
+  it("10枚の宣言は拒否される", () => {
+    const state = createState();
+
+    expect(() => submitDeclaration(state, 0, "spade", 10)).toThrow();
+  });
+
+  it("21枚の宣言は拒否される", () => {
+    const state = createState();
+
+    expect(() => submitDeclaration(state, 0, "spade", 21)).toThrow();
+  });
+
+  it("11枚の宣言は通る", () => {
+    const state = createState();
+
+    const next = submitDeclaration(state, 0, "spade", 11);
+
+    expect(next.declarations).toHaveLength(1);
+  });
+});
+
 describe("isStrongerDeclaration", () => {
   it("枚数が多い方が強い", () => {
     const a: Declaration = { playerId: 0, suit: "club", declaredCardCount: 12 };
