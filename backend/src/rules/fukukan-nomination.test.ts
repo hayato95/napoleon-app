@@ -19,6 +19,7 @@ function createState(overrides: Partial<GameState> = {}): GameState {
     napoleonId: 0,
     fukukanCard: null,
     fukukanId: null,
+    hitoridachi: false,
     fukukanRevealed: false,
     currentTrick: null,
     trickHistory: [],

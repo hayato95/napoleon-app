@@ -41,6 +41,7 @@ export interface Trick {
   leaderId: PlayerId;
   plays: TrickPlay[]; // 出された順
   winnerId?: PlayerId; // 決着後にセット
+  leadJokerSuit?: Suit; // 親がジョーカーでリードしたときに指定した台札のスート（FR-23）。それ以外のトリックでは無い
 }
 
 // --- ゲーム全体の進行フェーズ ---
@@ -64,7 +65,8 @@ export interface GameState {
 
   napoleonId: PlayerId | null;
   fukukanCard: Card | null; // 副官指定カード
-  fukukanId: PlayerId | null; // 本人以外に見せてはいけない（FR-10）
+  fukukanId: PlayerId | null; // 本人以外に見せてはいけない（FR-10）。未確定、または独り立ちのときはnull
+  hitoridachi: boolean; // 独り立ち（指定カードを4人の誰も持っておらず、ナポレオンが1対4で戦う）ならtrue。ナポレオン以外に見せてはいけない（FR-10）
   fukukanRevealed: boolean; // FR-12で公開されたらtrue
 
   currentTrick: Trick | null;
