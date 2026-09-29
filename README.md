@@ -87,16 +87,22 @@ FR-01〜FR-77 の全機能要件、優先度（Must/Should/Could）、担当区�
 
 ```
 napoleon-app/
-├── frontend/          # React + TypeScript（Vite）
+├── frontend/          # React + TypeScript（Vite）→ frontend/README.md 参照
+│   ├── src/
+│   │   ├── App.tsx          # ルートコンポーネント
+│   │   ├── components/       # PlayingCard.tsx, Hand.tsx など
+│   │   └── types.ts           # Card等の型定義（backendから複製）
+│   └── public/cards/           # トランプ画像（仮置き、Kenney.nl CC0）
+├── backend/           # Node.js + TypeScript + Socket.IO → backend/README.md 参照
 │   └── src/
-│       ├── App.tsx    # ルートコンポーネント
-│       └── main.tsx   # エントリーポイント
-├── backend/           # Node.js + TypeScript + Socket.IO
-│   └── src/
-│       └── index.ts   # Socket.IOサーバー起動処理
+│       ├── index.ts    # Socket.IOサーバー起動処理
+│       ├── types.ts     # ルールエンジン全体の型定義
+│       └── rules/         # FR単位に分割された純粋関数（各FRに *.test.ts が対応）
 └── .github/workflows/
     └── ci.yml         # lint・型チェック・build・ユニットテストの自動実行
 ```
+
+各ディレクトリの起動コマンド・詳細な中身は [backend/README.md](backend/README.md) / [frontend/README.md](frontend/README.md) を参照。
 
 ## 環境構築（初心者向け）
 
@@ -162,7 +168,7 @@ npm install
 npm run dev
 ```
 
-両方を起動した状態でfrontendにアクセスすると、Socket.IO経由でbackendからのイベントを受信できることを画面上で確認できる（疎通確認用の最小UI）。
+両方を起動した状態でfrontendにアクセスすると、Socket.IO経由でbackendから配られた手札がトランプの絵として表示され、カードを選んでの交換（捨て札）まで操作できる。
 
 ## 開発ルール（QA方針）
 
