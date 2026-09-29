@@ -1,10 +1,11 @@
 import type { Declaration, GameState, PlayerId, Suit } from "../types.js";
 import { SUIT_STRENGTH_ORDER } from "../types.js";
+import { isValidDeclaredCardCount } from "./declaration-limit.js";
 
 // FR-03のスコープ: 宣言(またはパス)を受け付けてdeclarationsに記録し、次の手番に進める。
 // FR-04のスコープ: 直前の宣言より弱い宣言を拒否する（パスは常に許可、比較対象外）。
-// 最低枚数チェック(FR-07)・全員パス時の配り直し(FR-05)は、あえてここに入れず
-// 後続issueの責務として分離している。
+// FR-07のスコープ: 宣言枚数が11〜20枚の範囲外なら拒否する（判定はdeclaration-limit.ts）。
+// 全員パス時の配り直し(FR-05)は、判定をredeal.tsに分離している。
 export function submitDeclaration(
   state: GameState,
   playerId: PlayerId,
@@ -12,6 +13,10 @@ export function submitDeclaration(
   declaredCardCount: number | null,
 ): GameState {
   const declaration: Declaration = { playerId, suit, declaredCardCount };
+
+   if (!isValidDeclaredCardCount(declaredCardCount)) {
+    throw new Error("宣言できる枚数は11〜20枚です");
+  }
 
   if (declaredCardCount !== null) {
     const previousDeclaration = findLatestDeclaration(state.declarations);
