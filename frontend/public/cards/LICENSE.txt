@@ -1,0 +1,6 @@
+Playing Cards Pack by Kenney (kenney.nl)
+License: Creative Commons CC0 1.0 (public domain, no attribution required)
+Source: https://kenney.nl/assets/playing-cards-pack
+
+Placeholder card art for #44 (FR-35). Intended to be replaced with the
+project's original card design in #56 (FR-61).

@@ -24,6 +24,7 @@ function createState(): GameState {
     currentTrick: null,
     trickHistory: [],
     capturedCards: { 0: [], 1: [], 2: [], 3: [], 4: [] },
+    discardedCards: [],
     turnOrder: [0, 1, 2, 3, 4],
   };
 }
@@ -116,6 +117,28 @@ describe("submitDeclaration", () => {
     const next = submitDeclaration(state, 1, null, null);
 
     expect(next.declarations[1]).toEqual({ playerId: 1, suit: null, declaredCardCount: null });
+  });
+});
+
+describe("submitDeclaration（FR-07: 宣言枚数の範囲チェック）", () => {
+  it("10枚の宣言は拒否される", () => {
+    const state = createState();
+
+    expect(() => submitDeclaration(state, 0, "spade", 10)).toThrow();
+  });
+
+  it("21枚の宣言は拒否される", () => {
+    const state = createState();
+
+    expect(() => submitDeclaration(state, 0, "spade", 21)).toThrow();
+  });
+
+  it("11枚の宣言は通る", () => {
+    const state = createState();
+
+    const next = submitDeclaration(state, 0, "spade", 11);
+
+    expect(next.declarations).toHaveLength(1);
   });
 });
 

@@ -41,6 +41,7 @@ export interface Trick {
   leaderId: PlayerId;
   plays: TrickPlay[]; // 出された順
   winnerId?: PlayerId; // 決着後にセット
+  leadJokerSuit?: Suit; // 親がジョーカーでリードしたときに指定した台札のスート（FR-23）。それ以外のトリックでは無い
 }
 
 // --- ゲーム全体の進行フェーズ ---
@@ -71,6 +72,8 @@ export interface GameState {
   currentTrick: Trick | null;
   trickHistory: Trick[];
   capturedCards: Record<PlayerId, Card[]>; // 個人ごとの獲得絵札（FR-26集計・FR-40表示の両方で使う）
+  discardedCards: Card[]; // FR-14で公開された、ナポレオンの捨て札に含まれていた絵札。
+  // 1回目のトリック勝者の得点に加算されるまでの一時置き場（加算処理自体はFR-26の責務）
 
   turnOrder: PlayerId[]; // 現在の手番順
 }
