@@ -72,6 +72,6 @@ export interface GameState {
   currentTrick: Trick | null;
   trickHistory: Trick[];
   capturedCards: Record<PlayerId, Card[]>; // 個人ごとの獲得絵札（FR-26集計・FR-40表示の両方で使う）
-
+discardedCards: Card[];
   turnOrder: PlayerId[]; // 現在の手番順
 }
