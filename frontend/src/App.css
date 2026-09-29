@@ -161,6 +161,42 @@
   }
 }
 
+.hand {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  padding: 16px 0;
+}
+
+.playing-card {
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+  line-height: 0;
+
+  img {
+    width: 72px;
+    height: auto;
+    border-radius: 6px;
+  }
+
+  &[data-selected='true'] {
+    border-color: red;
+  }
+
+  &[data-playable='false'] {
+    cursor: not-allowed;
+
+    img {
+      opacity: 0.4;
+      filter: grayscale(80%);
+    }
+  }
+}
+
 .ticks {
   position: relative;
   width: 100%;

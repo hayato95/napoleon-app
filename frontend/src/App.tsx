@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import { io } from 'socket.io-client'
 import './App.css'
+import { Hand } from './components/Hand'
+import type { Card } from './types'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001'
 
 function App() {
   const [status, setStatus] = useState('backendに接続中...')
-  const [hand, setHand] = useState<unknown[]>([])
+  const [hand, setHand] = useState<Card[]>([])
   const [selectedCards, setSelectedCards] = useState<number[]>([])
   const [socket, setSocket] = useState<ReturnType<typeof io> | null>(null)
 
@@ -48,14 +50,14 @@ function App() {
 
     newSocket.on(
       'yourHand',
-      (data: { playerId: number; hand: unknown[] }) => {
+      (data: { playerId: number; hand: Card[] }) => {
         setHand(data.hand)
       },
     )
 
     newSocket.on(
       'handAfterDiscard',
-      (data: { playerId: number; hand: unknown[] }) => {
+      (data: { playerId: number; hand: Card[] }) => {
         setHand(data.hand)
         setSelectedCards([])
       },
@@ -78,22 +80,12 @@ function App() {
       <div>
         <h2>あなたの手札</h2>
 
-        {hand.map((card, index) => (
-          <div
-            key={index}
-            onClick={() => toggleCardSelection(index)}
-            style={{
-              cursor: 'pointer',
-              border: selectedCards.includes(index)
-                ? '2px solid red'
-                : '1px solid black',
-              padding: '8px',
-              margin: '4px',
-            }}
-          >
-            {JSON.stringify(card)}
-          </div>
-        ))}
+        <Hand
+          hand={hand}
+          isPlayable={() => true}
+          selectedIndexes={selectedCards}
+          onCardClick={toggleCardSelection}
+        />
 
         <button
           onClick={discardSelectedCards}
