@@ -2,6 +2,7 @@ import { determineTrickWinner } from "./trick-winner.js";
 import type { Card, GameState, PlayerId } from "../types.js";
 import { cardsEqual } from "./trick-start.js";
 import { canPlayCard } from "./card-follow.js";
+import { revealFukukanIfPlayed } from "./fukukan-reveal.js";
 
 function getNextPlayerId(
   state: GameState,
@@ -30,7 +31,8 @@ export function playCard(
     throw new Error("現在進行中のトリックがありません");
   }
 
-  const plays = state.currentTrick.plays;
+  const currentTrick = state.currentTrick;
+  const plays = currentTrick.plays;
 
   if (plays.length >= 5) {
     throw new Error("このトリックにはすでに5枚のカードがあります");
@@ -49,11 +51,14 @@ export function playCard(
     throw new Error("手札に無いカードは出せません");
   }
 
-  const leadJokerSuit = state.currentTrick.leadJokerSuit;
+  const leadJokerSuit = currentTrick.leadJokerSuit;
 
   if (!canPlayCard(player.hand, plays, card, leadJokerSuit)) {
     throw new Error("このカードは出せません");
   }
+
+  // FR-12: フォローで副官指定カードが出た瞬間にも公開する（リード側はplayLeadCardで対応済み）
+  state = revealFukukanIfPlayed(state, card);
 
   const newPlays = [
     ...plays,
@@ -65,7 +70,7 @@ export function playCard(
 
   if (newPlays.length === 5) {
     const completedTrick = {
-      ...state.currentTrick,
+      ...currentTrick,
       plays: newPlays,
     };
 
@@ -109,7 +114,7 @@ export function playCard(
         : p,
     ),
     currentTrick: {
-      ...state.currentTrick,
+      ...currentTrick,
       plays: newPlays,
     },
   };
