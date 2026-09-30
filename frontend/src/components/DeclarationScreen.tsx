@@ -25,11 +25,22 @@ export function DeclarationScreen({ onDeclare, onPass }: DeclarationScreenProps)
   const [selectedSuit, setSelectedSuit] = useState<Suit | null>(null)
   const [selectedCount, setSelectedCount] = useState<number>(MIN_DECLARED_CARD_COUNT)
 
+  const resetSelection = () => {
+    setSelectedSuit(null)
+    setSelectedCount(MIN_DECLARED_CARD_COUNT)
+  }
+
   const handleDeclare = () => {
     if (selectedSuit === null) {
       return
     }
     onDeclare(selectedSuit, selectedCount)
+    resetSelection()
+  }
+
+  const handlePass = () => {
+    onPass()
+    resetSelection()
   }
 
   return (
@@ -64,7 +75,7 @@ export function DeclarationScreen({ onDeclare, onPass }: DeclarationScreenProps)
         <button type="button" onClick={handleDeclare} disabled={selectedSuit === null}>
           宣言する
         </button>
-        <button type="button" onClick={onPass}>
+        <button type="button" onClick={handlePass}>
           パス
         </button>
       </div>
