@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { io } from 'socket.io-client'
 import './App.css'
-import { Hand } from './components/Hand'
+import { CardExchangeScreen } from './components/CardExchangeScreen'
 import type { Card } from './types'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001'
@@ -9,31 +9,10 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001'
 function App() {
   const [status, setStatus] = useState('backendに接続中...')
   const [hand, setHand] = useState<Card[]>([])
-  const [selectedCards, setSelectedCards] = useState<number[]>([])
   const [socket, setSocket] = useState<ReturnType<typeof io> | null>(null)
 
-  const toggleCardSelection = (index: number) => {
-    setSelectedCards((current) => {
-      if (current.includes(index)) {
-        return current.filter((i) => i !== index)
-      }
-
-      if (current.length >= 3) {
-        return current
-      }
-
-      return [...current, index]
-    })
-  }
-
-  const discardSelectedCards = () => {
-    if (selectedCards.length !== 3 || socket === null) {
-      return
-    }
-
-    socket.emit('discardCards', {
-      cardIndexes: selectedCards,
-    })
+  const discardCards = (cardIndexes: number[]) => {
+    socket?.emit('discardCards', { cardIndexes })
   }
 
   useEffect(() => {
@@ -59,7 +38,6 @@ function App() {
       'handAfterDiscard',
       (data: { playerId: number; hand: Card[] }) => {
         setHand(data.hand)
-        setSelectedCards([])
       },
     )
 
@@ -80,19 +58,7 @@ function App() {
       <div>
         <h2>あなたの手札</h2>
 
-        <Hand
-          hand={hand}
-          isPlayable={() => true}
-          selectedIndexes={selectedCards}
-          onCardClick={toggleCardSelection}
-        />
-
-        <button
-          onClick={discardSelectedCards}
-          disabled={selectedCards.length !== 3}
-        >
-          選択した3枚を捨てる
-        </button>
+        <CardExchangeScreen hand={hand} onDiscard={discardCards} />
       </div>
     </main>
   )
