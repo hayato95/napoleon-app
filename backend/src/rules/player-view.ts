@@ -50,6 +50,7 @@ export interface PlayerView {
 
   currentTrick: Trick | null;
   trickHistory: Trick[];
+  discardedCards: Card[]; // FR-14で公開された、ナポレオンの捨て札に含まれていた絵札（全員に公開）
   capturedCards: Record<PlayerId, Card[]>; // 獲得した絵札は表向きなので全員に公開
   turnOrder: PlayerId[];
 }
@@ -97,6 +98,7 @@ export function toPlayerView(state: GameState, viewerId: PlayerId): PlayerView {
 
     currentTrick: state.currentTrick,
     trickHistory: [...state.trickHistory],
+    discardedCards: [...state.discardedCards],
     capturedCards: { ...state.capturedCards },
     turnOrder: [...state.turnOrder],
   };
