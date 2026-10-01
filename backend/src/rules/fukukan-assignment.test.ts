@@ -119,3 +119,72 @@ describe("FR-10: assignFukukan（副官の確定）", () => {
     expect(() => assignFukukan(createState({ hitoridachi: true }))).toThrow();
   });
 });
+
+// FR-15: カード交換（ナポレオンが場札3枚を受け取り、3枚を捨てる）の後に副官を確定するケース。
+// 交換で動くのはナポレオンの手札と場札だけなので、assignFukukan は交換後に呼んでも
+// 「指定カードが他の4人の手札にない → 独り立ち（ナポレオンが副官を兼任）」と判定できることを確かめる。
+describe("FR-15: カード交換後の副官の確定", () => {
+  const SPADE_5: Card = { type: "normal", suit: "spade", rank: 5 };
+  const DIAMOND_9: Card = { type: "normal", suit: "diamond", rank: 9 };
+
+  // 交換前：指定カード(♡Q)は場札に入っている
+  const beforeExchange = () =>
+    withHand(
+      createState({ phase: "cardExchange", widow: [HEART_QUEEN, CLUB_3, JOKER] }),
+      0,
+      [SPADE_5, DIAMOND_9],
+    );
+
+  it("交換で受け取った指定カードを手札に残したら独り立ち（ナポレオンが兼任）", () => {
+    // 交換後：場札は空になり、♡Qはナポレオンの手札にある
+    const afterExchange = withHand(createState({ phase: "cardExchange", widow: [] }), 0, [
+      HEART_QUEEN,
+      SPADE_5,
+    ]);
+
+    const result = assignFukukan(afterExchange);
+
+    expect(result.fukukanId).toBeNull();
+    expect(result.hitoridachi).toBe(true);
+  });
+
+  it("交換で受け取った指定カードを捨てても独り立ち（ナポレオンが兼任）", () => {
+    // 交換後：♡Qは捨てられて、誰の手札にも場札にもない
+    const afterExchange = withHand(createState({ phase: "cardExchange", widow: [] }), 0, [
+      SPADE_5,
+      DIAMOND_9,
+    ]);
+
+    const result = assignFukukan(afterExchange);
+
+    expect(result.fukukanId).toBeNull();
+    expect(result.hitoridachi).toBe(true);
+  });
+
+  it("交換の前と後で判定結果が変わらない", () => {
+    const afterExchange = withHand(createState({ phase: "cardExchange", widow: [] }), 0, [
+      HEART_QUEEN,
+      SPADE_5,
+    ]);
+
+    const before = assignFukukan(beforeExchange());
+    const after = assignFukukan(afterExchange);
+
+    expect(after.fukukanId).toBe(before.fukukanId);
+    expect(after.hitoridachi).toBe(before.hitoridachi);
+  });
+
+  it("他の人が指定カードを持っていれば、交換後でもその人が副官のまま", () => {
+    // 交換は他の4人の手札を変えないので、3番が持っている♡Qはそのまま
+    const afterExchange = withHand(
+      withHand(createState({ phase: "cardExchange", widow: [] }), 0, [SPADE_5, JOKER]),
+      3,
+      [HEART_QUEEN],
+    );
+
+    const result = assignFukukan(afterExchange);
+
+    expect(result.fukukanId).toBe(3);
+    expect(result.hitoridachi).toBe(false);
+  });
+});
