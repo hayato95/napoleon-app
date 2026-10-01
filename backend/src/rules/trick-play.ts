@@ -3,6 +3,7 @@ import type { Card, GameState, PlayerId } from "../types.js";
 import { cardsEqual } from "./trick-start.js";
 import { canPlayCard } from "./card-follow.js";
 import { revealFukukanIfPlayed } from "./fukukan-reveal.js";
+import { captureFaceCards } from "./face-card-capture.js";
 
 function getNextPlayerId(
   state: GameState,
@@ -80,6 +81,9 @@ export function playCard(
       ...completedTrick,
       winnerId,
     };
+
+    // FR-20: トリックの勝者が、そのトリックに含まれる絵札を獲得する
+    state = captureFaceCards(state, completedTrickWithWinner);
 
     return {
       ...state,
