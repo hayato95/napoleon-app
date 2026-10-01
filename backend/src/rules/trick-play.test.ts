@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Card, GameState } from "../types.js";
+import type { Card, GameState, Trick } from "../types.js";
 import { playCard } from "./trick-play.js";
 
 function createState(overrides: Partial<GameState> = {}): GameState {
@@ -88,5 +88,45 @@ describe("playCard", () => {
     expect(result.trickHistory[0].winnerId).toBe(0);
     // 勝者はトリック中の絵札(スペードA・ハートK)を、誰が出したかに関わらずまとめて獲得する
     expect(result.capturedCards[0]).toEqual([SPADE_A, HEART_K]);
+  });
+
+  it("FR-21: 10トリック目の5枚目が出されたら、勝敗判定(result)フェーズに進む", () => {
+    const HEART_THREE: Card = { type: "normal", suit: "heart", rank: 3 };
+    const HEART_FOUR: Card = { type: "normal", suit: "heart", rank: 4 };
+    const HEART_FIVE: Card = { type: "normal", suit: "heart", rank: 5 };
+    const HEART_SIX: Card = { type: "normal", suit: "heart", rank: 6 };
+    const HEART_SEVEN: Card = { type: "normal", suit: "heart", rank: 7 };
+
+    // すでに終わった9トリック分（このテストでは回数だけが大事なので中身は空）
+    const nineFinishedTricks: Trick[] = Array.from({ length: 9 }, () => ({
+      leaderId: 0,
+      plays: [],
+      winnerId: 0,
+    }));
+
+    const state = createState({
+      trickHistory: nineFinishedTricks,
+      currentTrick: {
+        leaderId: 0,
+        plays: [
+          { playerId: 0, card: HEART_THREE },
+          { playerId: 1, card: HEART_FOUR },
+          { playerId: 2, card: HEART_FIVE },
+          { playerId: 3, card: HEART_SIX },
+        ],
+      },
+      players: [
+        { id: 0, name: "Player 0", isHuman: true, hand: [] },
+        { id: 1, name: "Player 1", isHuman: true, hand: [] },
+        { id: 2, name: "Player 2", isHuman: true, hand: [] },
+        { id: 3, name: "Player 3", isHuman: true, hand: [] },
+        { id: 4, name: "Player 4", isHuman: true, hand: [HEART_SEVEN] },
+      ],
+    });
+
+    const result = playCard(state, 4, HEART_SEVEN);
+
+    expect(result.trickHistory).toHaveLength(10);
+    expect(result.phase).toBe("result");
   });
 });
