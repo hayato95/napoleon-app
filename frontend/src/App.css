@@ -197,6 +197,41 @@
   }
 }
 
+.declaration-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+}
+
+.declaration-suits {
+  display: flex;
+  gap: 8px;
+}
+
+.suit-button {
+  padding: 8px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+
+  img {
+    width: 32px;
+    height: 32px;
+  }
+
+  &[data-selected='true'] {
+    border-color: var(--accent);
+  }
+}
+
+.declaration-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .ticks {
   position: relative;
   width: 100%;
