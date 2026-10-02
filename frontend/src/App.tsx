@@ -4,6 +4,7 @@ import './App.css'
 import { GameScreen } from './components/GameScreen'
 import { StartScreen } from './components/StartScreen'
 import type { PlayerAction, StateUpdate } from './protocol'
+import { useStepPlayback } from './use-step-playback'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001'
 
@@ -12,7 +13,7 @@ type Socket = ReturnType<typeof io>
 function App() {
   const [status, setStatus] = useState('backendに接続中...')
   const [accepted, setAccepted] = useState(false) // 満員で断られたときは false のまま
-  const [update, setUpdate] = useState<StateUpdate | null>(null)
+  const [update, pushUpdates] = useStepPlayback() // 途中の状態を、間を置いて順に見せる（#143）
   const [actionError, setActionError] = useState<string | null>(null)
   const socketRef = useRef<Socket | null>(null)
 
@@ -29,9 +30,9 @@ function App() {
       setAccepted(data.accepted)
     })
 
-    socket.on('stateUpdate', (data: StateUpdate) => {
+    socket.on('stateUpdates', (data: StateUpdate[]) => {
       setActionError(null)
-      setUpdate(data)
+      pushUpdates(data)
     })
 
     socket.on('actionError', (data: { message: string }) => {
@@ -46,7 +47,7 @@ function App() {
       socket.disconnect()
       socketRef.current = null
     }
-  }, [])
+  }, [pushUpdates])
 
   const send = useCallback((action: PlayerAction) => {
     setActionError(null)
