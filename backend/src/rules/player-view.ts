@@ -20,6 +20,7 @@ import type {
 //   - 誰が副官か → 副官本人だけが知っている（ナポレオンも知らない）
 //   - 独り立ちかどうか → ナポレオンだけが知っている（自分の手札か場札で指定カードを見ているため）
 //   - FR-12で公開された後(fukukanRevealed) → 全員に見える
+//   - 勝敗判定フェーズ(result)に入ったら → 副官も独り立ちも全員に見える（対局が終わっているので、もう隠す理由がない）
 
 // 他のプレイヤーの情報（手札の中身は持たせない）
 export interface PublicPlayerInfo {
@@ -65,12 +66,15 @@ export function toPlayerView(state: GameState, viewerId: PlayerId): PlayerView {
   const isNapoleon = state.napoleonId !== null && state.napoleonId === viewerId;
   const isDecided = state.fukukanId !== null || state.hitoridachi; // FR-10の確定処理が済んでいるか
 
-  // 誰が副官か: 公開後は全員、公開前は副官本人だけ
-  const visibleFukukanId = state.fukukanRevealed || isFukukan ? state.fukukanId : null;
+  // 対局が終わったら、リザルト画面で内訳を見せるために、誰が副官だったかも全員に見せる
+  const isGameOver = state.phase === "result";
 
-  // 独り立ちかどうか: 公開後は全員、公開前はナポレオンだけ（確定前は誰にも null）
+  // 誰が副官か: 公開後・対局終了後は全員、それ以前は副官本人だけ
+  const visibleFukukanId = state.fukukanRevealed || isGameOver || isFukukan ? state.fukukanId : null;
+
+  // 独り立ちかどうか: 公開後・対局終了後は全員、それ以前はナポレオンだけ（確定前は誰にも null）
   const visibleHitoridachi =
-    isDecided && (state.fukukanRevealed || isNapoleon) ? state.hitoridachi : null;
+    isDecided && (state.fukukanRevealed || isGameOver || isNapoleon) ? state.hitoridachi : null;
 
   return {
     viewerId,

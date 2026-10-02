@@ -1,5 +1,6 @@
 import type { Card, PlayerId, Rank, Suit } from "./types.js";
 import type { GameResult } from "./rules/game-result.js";
+import type { ResultSummary } from "./rules/result-summary.js";
 import type { PlayerView } from "./rules/player-view.js";
 
 // クライアント⇔サーバーでやり取りするデータの型と、クライアントから届いたデータの検証。
@@ -20,6 +21,7 @@ export interface StateUpdate {
   actorId: PlayerId | null; // 今操作する必要があるプレイヤー。ゲーム終了後は null
   playableCards: Card[]; // トリック中で自分の番のときだけ、手札のうち出せるカード。それ以外は空
   result: GameResult | null; // 勝敗判定フェーズに入ったときだけ入る
+  resultSummary: ResultSummary | null; // 同じく勝敗判定フェーズのときだけ入る、ナポレオン軍・連合軍の獲得絵札の内訳（FR-42）
 }
 
 const SUITS: readonly Suit[] = ["spade", "diamond", "heart", "club"];

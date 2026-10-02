@@ -155,10 +155,34 @@ describe("game-flow: 1局を最後まで通す", () => {
     }
   });
 
+  it("獲得絵札の内訳は、ナポレオン軍と連合軍で20枚に過不足なく分かれ、ナポレオン軍の枚数が勝敗判定と一致する", () => {
+    for (const seed of SEEDS) {
+      const update = buildStateUpdate(playToEnd(seed));
+      const summary = update.resultSummary;
+      expect(summary, `seed=${seed}`).not.toBeNull();
+      const army = (side: NonNullable<typeof summary>["napoleonArmy"]) =>
+        side.capturedCards.length + side.discardBonusCards.length;
+
+      expect(army(summary!.napoleonArmy), `seed=${seed}`).toBe(update.result!.napoleonArmyCount);
+      expect(army(summary!.napoleonArmy) + army(summary!.alliedArmy), `seed=${seed}`).toBe(20);
+      expect(summary!.napoleonArmy.memberIds.length + summary!.alliedArmy.memberIds.length, `seed=${seed}`).toBe(5);
+    }
+  });
+
+  it("対局が終わると、副官も全員から分かる", () => {
+    for (const seed of SEEDS) {
+      const state = playToEnd(seed);
+      const view = buildStateUpdate(state).view;
+      expect(view.fukukanId, `seed=${seed}`).toBe(state.fukukanId);
+      expect(view.hitoridachi, `seed=${seed}`).toBe(state.hitoridachi);
+    }
+  });
+
   it("結果は勝敗判定フェーズのときだけ stateUpdate に入る", () => {
     const rng = seededRng(5);
     const midGame = startGame(rng);
     expect(buildStateUpdate(midGame).result).toBeNull();
+    expect(buildStateUpdate(midGame).resultSummary).toBeNull();
 
     const finished = playToEnd(5);
     const update = buildStateUpdate(finished);
