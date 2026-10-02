@@ -146,11 +146,9 @@ describe("game-flow: 1局を最後まで通す", () => {
       }
       const played = state.trickHistory.flatMap((trick) => trick.plays.map((play) => play.card));
       expect(played, `seed=${seed}`).toHaveLength(50);
-      for (let i = 0; i < played.length; i++) {
-        for (let j = i + 1; j < played.length; j++) {
-          expect(cardsEqual(played[i], played[j]), `seed=${seed}`).toBe(false);
-        }
-      }
+      // 全ペアを1組ずつ expect すると、300局で約37万回になり遅い。カードを文字列にして Set に入れ、重複がなければ個数が変わらないことを1回だけ確かめる
+      const uniqueCards = new Set(played.map((card) => JSON.stringify(card)));
+      expect(uniqueCards.size, `seed=${seed}`).toBe(played.length);
     }
   });
 
