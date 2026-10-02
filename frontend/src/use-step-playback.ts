@@ -5,9 +5,9 @@ import type { StateUpdate } from './protocol'
 // それを、間を置いて1つずつ見せる。最後の状態は、次の操作が来るまで出し続ける。
 
 // CPUが1手打ったあと、次の手を見せるまでの時間
-export const CPU_MOVE_DELAY_MS = 800
+export const CPU_MOVE_DELAY_MS = 1200
 // トリックが終わった状態は、全員のカードと勝者を見てもらうため、長めに止める
-export const TRICK_COMPLETE_DELAY_MS = 1500
+export const TRICK_COMPLETE_DELAY_MS = 2000
 
 interface Playback {
   steps: StateUpdate[] // 今回受け取った、途中の状態の並び

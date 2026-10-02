@@ -427,11 +427,6 @@
   }
 }
 
-.last-trick {
-  margin-top: 16px;
-  opacity: 0.8;
-}
-
 .joker-suit-picker {
   display: flex;
   flex-wrap: wrap;

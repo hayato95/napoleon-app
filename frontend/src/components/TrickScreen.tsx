@@ -23,7 +23,11 @@ export function TrickScreen({ update, onPlay }: TrickScreenProps) {
   const myTurn = actorId === view.viewerId
   const currentTrick = view.currentTrick
   const lastTrick = view.trickHistory[view.trickHistory.length - 1]
-  const trickNumber = Math.min(view.trickHistory.length + 1, TOTAL_TRICKS)
+  // 場の中央に出すトリック。進行中のものがあればそれを、なければ（完了した直後なら）直前に完了したものを、次の1枚目が出るまで出し続ける
+  const isResultShown = currentTrick === null && lastTrick !== undefined
+  const shownTrick = currentTrick ?? lastTrick ?? null
+  // 完了した結果を出しているときは、その番号（trickHistory の件数）にする
+  const trickNumber = isResultShown ? view.trickHistory.length : Math.min(view.trickHistory.length + 1, TOTAL_TRICKS)
   const isPlayable = (card: Card) => myTurn && playableCards.some((playable) => cardsEqual(playable, card))
 
   const handleCardClick = (index: number) => {
@@ -67,21 +71,14 @@ export function TrickScreen({ update, onPlay }: TrickScreenProps) {
 
       <section className="trick-table" aria-label="場">
         <h2>
-          トリック {trickNumber}/{TOTAL_TRICKS}
+          {isResultShown && lastTrick !== undefined
+            ? `トリック ${trickNumber} の結果（勝者: ${lastTrick.winnerId === undefined ? '-' : playerName(view, lastTrick.winnerId)}）`
+            : `トリック ${trickNumber}/${TOTAL_TRICKS}`}
         </h2>
 
-        {currentTrick !== null ? (
-          <TrickCards trick={currentTrick} view={view} highlightLatest={true} />
-        ) : (
-          <p>{myTurn ? 'あなたがリードします。出すカードを選んでください。' : 'CPUの手番です。'}</p>
-        )}
+        {shownTrick !== null && <TrickCards trick={shownTrick} view={view} highlightLatest={!isResultShown} />}
 
-        {lastTrick !== undefined && (
-          <div className="last-trick">
-            <h3>前のトリック（勝者: {lastTrick.winnerId === undefined ? '-' : playerName(view, lastTrick.winnerId)}）</h3>
-            <TrickCards trick={lastTrick} view={view} />
-          </div>
-        )}
+        {currentTrick === null && <p>{myTurn ? 'あなたがリードします。出すカードを選んでください。' : 'CPUの手番です。'}</p>}
       </section>
 
       {pendingJoker !== null && (
