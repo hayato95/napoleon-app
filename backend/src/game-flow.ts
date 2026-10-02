@@ -80,6 +80,14 @@ function getTrickActorId(state: GameState): PlayerId {
 
 /** 新しいゲームを作り、人間の番が来るまでCPUの手を進める */
 export function startGame(rng: Rng, options: FlowOptions = {}): GameState {
+  return lastStep(startGameSteps(rng, options));
+}
+
+/**
+ * startGame と同じ処理で、途中の状態もすべて返す（画面で1手ずつ見せるため）。
+ * 先頭が配札直後の状態、末尾が startGame の戻り値と同じ最終状態。
+ */
+export function startGameSteps(rng: Rng, options: FlowOptions = {}): GameState[] {
   return advanceCpuTurns(setupDeal(rng), rng, options);
 }
 
@@ -90,8 +98,26 @@ export function handleHumanAction(
   rng: Rng,
   options: FlowOptions = {},
 ): GameState {
+  return lastStep(handleHumanActionSteps(state, action, rng, options));
+}
+
+/**
+ * handleHumanAction と同じ処理で、途中の状態もすべて返す（画面で1手ずつ見せるため）。
+ * 先頭が人間の操作を反映した直後の状態、末尾が handleHumanAction の戻り値と同じ最終状態。
+ */
+export function handleHumanActionSteps(
+  state: GameState,
+  action: PlayerAction,
+  rng: Rng,
+  options: FlowOptions = {},
+): GameState[] {
   const next = applyAction(state, HUMAN_SEAT, action, rng);
   return advanceCpuTurns(next, rng, options);
+}
+
+// advanceCpuTurns は必ず1つ以上の状態を返すので、末尾は必ずある
+function lastStep(steps: GameState[]): GameState {
+  return steps[steps.length - 1];
 }
 
 /** クライアントに送る内容を作る。toPlayerView を通すので、見せてはいけない情報は含まれない */
@@ -115,15 +141,19 @@ export function buildStateUpdate(state: GameState, viewerId: PlayerId = HUMAN_SE
   };
 }
 
-function advanceCpuTurns(state: GameState, rng: Rng, options: FlowOptions): GameState {
+// 人間の番が来る（またはゲームが終わる）まで、CPUの手を1手ずつ進める。
+// 受け取った状態から、CPUが1手打つたびの状態までを順に並べて返す（先頭は受け取った状態そのもの）。
+function advanceCpuTurns(state: GameState, rng: Rng, options: FlowOptions): GameState[] {
+  const steps: GameState[] = [state];
   let current = state;
 
   for (let step = 0; step < MAX_CPU_STEPS; step++) {
     const actorId = getActorId(current);
     if (actorId === null || actorId === HUMAN_SEAT) {
-      return current;
+      return steps;
     }
     current = cpuAct(current, actorId, rng, options);
+    steps.push(current);
   }
 
   throw new Error("CPUの処理が終わりませんでした");

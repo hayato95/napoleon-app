@@ -4,7 +4,14 @@ import { HUMAN_SEAT, setupDeal } from "./deal.js";
 import { fallbackCpuDiscard } from "./cpu-discard-fallback.js";
 import { parsePlayerAction } from "./protocol.js";
 import type { PlayerAction } from "./protocol.js";
-import { buildStateUpdate, getActorId, handleHumanAction, startGame } from "./game-flow.js";
+import {
+  buildStateUpdate,
+  getActorId,
+  handleHumanAction,
+  handleHumanActionSteps,
+  startGame,
+  startGameSteps,
+} from "./game-flow.js";
 import { cpuDeclaration } from "./rules/cpu-declaration.js";
 import { cpuFukukanNomination } from "./rules/cpu-fukukan-nomination.js";
 import { chooseCpuTrickCard } from "./rules/cpu-trick-play.js";
@@ -189,6 +196,108 @@ describe("game-flow: 1局を最後まで通す", () => {
     expect(update.result).not.toBeNull();
     expect(update.result?.declaredCount).toBe(finished.declaredCount);
     expect(update.actorId).toBeNull();
+  });
+});
+
+// トリックの中で、これまでに場に出たカードの合計枚数（完了したトリックと進行中のトリックの両方を数える）
+function playedCardCount(state: GameState): number {
+  return (
+    state.trickHistory.reduce((sum, trick) => sum + trick.plays.length, 0) +
+    (state.currentTrick?.plays.length ?? 0)
+  );
+}
+
+describe("game-flow: 途中の状態（CPUの手を1手ずつ見せる）", () => {
+  const SEEDS = Array.from({ length: 100 }, (_, i) => i + 1);
+
+  // 同じ乱数・同じ操作で、最終状態だけを返す版(handleHumanAction)と、途中の状態も返す版(...Steps)を並べて進める
+  function playBothWays(seed: number, check: (steps: GameState[], previous: GameState) => void): void {
+    const rngA = seededRng(seed);
+    const rngB = seededRng(seed);
+
+    let stateA = startGame(rngA);
+    const startSteps = startGameSteps(rngB);
+    let previous = startSteps[startSteps.length - 1];
+    expect(previous, `seed=${seed} 開始`).toEqual(stateA);
+
+    for (let i = 0; i < 200 && stateA.phase !== "result"; i++) {
+      const action = humanAutoPlayer(stateA, rngA);
+      expect(humanAutoPlayer(previous, rngB), `seed=${seed}`).toEqual(action);
+
+      stateA = handleHumanAction(stateA, action, rngA);
+      const steps = handleHumanActionSteps(previous, action, rngB);
+      check(steps, previous);
+
+      // 途中の状態を返す版でも、最終状態は最終状態だけを返す版と同じになる
+      expect(steps[steps.length - 1], `seed=${seed}`).toEqual(stateA);
+      previous = steps[steps.length - 1];
+    }
+  }
+
+  it("開始時は、配札直後の状態から始まり、最後は startGame と同じ状態になる", () => {
+    for (const seed of SEEDS) {
+      const steps = startGameSteps(seededRng(seed));
+      expect(steps[0].declarations, `seed=${seed}`).toEqual([]);
+      expect(steps[steps.length - 1], `seed=${seed}`).toEqual(startGame(seededRng(seed)));
+    }
+  });
+
+  it("途中の状態の最後は、最終状態だけを返す版の結果と、どの局面でも一致する", () => {
+    for (const seed of SEEDS) {
+      playBothWays(seed, () => {});
+    }
+  });
+
+  it("先頭は人間の操作を反映した直後の状態で、最後以外は次に操作するのがCPU", () => {
+    for (const seed of SEEDS) {
+      playBothWays(seed, (steps) => {
+        steps.slice(0, -1).forEach((step, index) => {
+          const actorId = getActorId(step);
+          expect(actorId, `seed=${seed} step=${index}`).not.toBeNull();
+          expect(actorId, `seed=${seed} step=${index}`).not.toBe(HUMAN_SEAT);
+        });
+      });
+    }
+  });
+
+  it("トリック中は、1つ進むごとに場に出たカードがちょうど1枚増える", () => {
+    for (const seed of SEEDS) {
+      playBothWays(seed, (steps, previous) => {
+        const all = [previous, ...steps];
+        for (let i = 1; i < all.length; i++) {
+          if (all[i - 1].phase === "trick" && all[i].phase !== "result") {
+            expect(playedCardCount(all[i]) - playedCardCount(all[i - 1]), `seed=${seed}`).toBe(1);
+          }
+        }
+      });
+    }
+  });
+
+  it("宣言中は、1つ進むごとに宣言（またはパス）の記録がちょうど1件増える（配り直しを除く）", () => {
+    for (const seed of SEEDS) {
+      playBothWays(seed, (steps, previous) => {
+        const all = [previous, ...steps];
+        for (let i = 1; i < all.length; i++) {
+          const before = all[i - 1];
+          const after = all[i];
+          const redealt = after.declarations.length < before.declarations.length;
+          if (before.phase === "declaration" && after.phase === "declaration" && !redealt) {
+            expect(after.declarations.length - before.declarations.length, `seed=${seed}`).toBe(1);
+          }
+        }
+      });
+    }
+  });
+
+  it("CPUが動かない場面（人間の操作のあとすぐ人間の番）では、途中の状態は1つだけ", () => {
+    // ゲーム開始直後は人間が最初に宣言するので、CPUの手はなく、状態は配札直後の1つだけ
+    expect(startGameSteps(seededRng(1))).toHaveLength(1);
+  });
+
+  it("人間の操作が不正なら、途中の状態を返さずに例外を投げる", () => {
+    const rng = seededRng(1);
+    const state = startGame(rng);
+    expect(() => handleHumanActionSteps(state, { type: "playCard", card: { type: "joker" } }, rng)).toThrow();
   });
 });
 
