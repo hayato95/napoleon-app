@@ -7,6 +7,7 @@ import type { PlayerView } from "./rules/player-view.js";
 
 // 人間プレイヤーが行える操作。誰の操作か(playerId)はサーバーがソケットから決めるので、ここには含めない。
 export type PlayerAction =
+  | { type: "startGame" }
   | { type: "declare"; suit: Suit; count: number }
   | { type: "pass" }
   | { type: "nominateFukukan"; card: Card }
@@ -63,6 +64,8 @@ export function parsePlayerAction(raw: unknown): PlayerAction {
   }
 
   switch (raw.type) {
+    case "startGame":
+      return { type: "startGame" };
     case "declare": {
       const count = raw.count;
       if (typeof count !== "number" || !Number.isInteger(count)) {
