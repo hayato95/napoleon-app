@@ -32,13 +32,13 @@ export function TableInfo({ view }: TableInfoProps) {
           <dd>{cardLabel(view.fukukanCard)}</dd>
         </div>
       )}
-      {view.fukukanRevealed && view.fukukanId !== null && (
+      {(view.fukukanRevealed || view.phase === 'result') && view.fukukanId !== null && (
         <div>
           <dt>副官</dt>
           <dd>{playerName(view, view.fukukanId)}</dd>
         </div>
       )}
-      {!view.fukukanRevealed && view.isFukukan && (
+      {!view.fukukanRevealed && view.isFukukan && view.phase !== 'result' && (
         <div>
           <dt>あなたの役割</dt>
           <dd>副官（まだ公開されていません）</dd>

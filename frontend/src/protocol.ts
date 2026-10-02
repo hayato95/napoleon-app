@@ -42,12 +42,26 @@ export interface GameResult {
   declaredCount: number
 }
 
+// ナポレオン軍・連合軍それぞれの獲得絵札の内訳（backend/src/rules/result-summary.ts と同じ形）
+export interface ArmySummary {
+  memberIds: PlayerId[]
+  capturedCards: Card[] // 軍のメンバーがトリックで獲得した絵札
+  discardBonusCards: Card[] // 1トリック目の勝者が軍にいるときだけ入る、ナポレオンの捨て札の絵札
+}
+
+export interface ResultSummary {
+  napoleonArmy: ArmySummary
+  alliedArmy: ArmySummary
+  hitoridachi: boolean
+}
+
 // サーバーが状態の変わるたびに送ってくる内容（イベント名 "stateUpdate"）
 export interface StateUpdate {
   view: PlayerView
   actorId: PlayerId | null // 今操作する必要があるプレイヤー。ゲーム終了後は null
   playableCards: Card[] // トリック中の自分の番だけ、手札のうち出せるカード
   result: GameResult | null // 勝敗判定フェーズのときだけ入る
+  resultSummary: ResultSummary | null // 同じく勝敗判定フェーズのときだけ入る、獲得絵札の内訳
 }
 
 // サーバーに送る操作（イベント名 "action"）。誰の操作かはサーバーが決めるので含めない
