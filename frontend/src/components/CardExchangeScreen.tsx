@@ -4,6 +4,8 @@ import { Hand } from './Hand'
 import { TableLayout } from './TableLayout'
 
 const DISCARD_COUNT = 3
+// 受け取った場札の枚数。サーバーが手札の末尾に足すので、末尾のこの枚数が場札
+const WIDOW_COUNT = 3
 
 interface CardExchangeScreenProps {
   update: StateUpdate
@@ -62,6 +64,7 @@ export function CardExchangeScreen({ update, onDiscard }: CardExchangeScreenProp
           isPlayable={() => true}
           selectedIndexes={selectedIndexes}
           onCardClick={toggleCardSelection}
+          unsortedTailCount={WIDOW_COUNT}
         />
       }
     />

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { trickCardRoleLabel } from './card-utils'
+import { handDisplayOrder, trickCardRoleLabel } from './card-utils'
 import type { Card, Rank, Suit } from './types'
 
 const normal = (suit: Suit, rank: Rank): Card => ({ type: 'normal', suit, rank })
@@ -53,5 +53,59 @@ describe('trickCardRoleLabel', () => {
 
   it('台札が決まっていないとき（null）は「親と同じスート」を付けない', () => {
     expect(trickCardRoleLabel(normal('club', 5), 'heart', null)).toBeNull()
+  })
+})
+
+describe('handDisplayOrder', () => {
+  const JOKER: Card = { type: 'joker' }
+  // 表示順に並べたカードを返す（テストを読みやすくするため）
+  const sorted = (hand: Card[], unsortedTailCount?: number) =>
+    handDisplayOrder(hand, unsortedTailCount).map((index) => hand[index])
+
+  it('スートは左から ♥ → ♣ → ♦ → ♠ の順に並ぶ', () => {
+    const hand = [normal('spade', 5), normal('diamond', 5), normal('club', 5), normal('heart', 5)]
+    expect(sorted(hand)).toEqual([normal('heart', 5), normal('club', 5), normal('diamond', 5), normal('spade', 5)])
+  })
+
+  it('同じスートの中では 2 → 10 → J → Q → K → A の順に並ぶ', () => {
+    const hand = [normal('heart', 'A'), normal('heart', 10), normal('heart', 'K'), normal('heart', 2), normal('heart', 'J'), normal('heart', 'Q'), normal('heart', 9)]
+    expect(sorted(hand)).toEqual([
+      normal('heart', 2),
+      normal('heart', 9),
+      normal('heart', 10),
+      normal('heart', 'J'),
+      normal('heart', 'Q'),
+      normal('heart', 'K'),
+      normal('heart', 'A'),
+    ])
+  })
+
+  it('ジョーカーは一番右に並ぶ', () => {
+    const hand = [JOKER, normal('spade', 'A'), normal('heart', 2)]
+    expect(sorted(hand)).toEqual([normal('heart', 2), normal('spade', 'A'), JOKER])
+  })
+
+  it('戻り値は元の手札の番号で、手札そのものは書き換えない', () => {
+    const hand = [normal('spade', 5), normal('heart', 5)]
+    expect(handDisplayOrder(hand)).toEqual([1, 0])
+    expect(hand).toEqual([normal('spade', 5), normal('heart', 5)])
+  })
+
+  it('unsortedTailCount を渡すと、末尾のその枚数は並べ替えずに右端へ置く（カード交換の場札）', () => {
+    // 手札3枚 + 場札3枚。場札（♥2・ジョーカー・♣K）は受け取った順のまま右端に残る
+    const hand = [normal('spade', 5), normal('heart', 9), normal('club', 3), normal('heart', 2), JOKER, normal('club', 'K')]
+    expect(sorted(hand, 3)).toEqual([
+      normal('heart', 9),
+      normal('club', 3),
+      normal('spade', 5),
+      normal('heart', 2),
+      JOKER,
+      normal('club', 'K'),
+    ])
+  })
+
+  it('空の手札や、手札より大きい unsortedTailCount でも壊れない', () => {
+    expect(handDisplayOrder([])).toEqual([])
+    expect(handDisplayOrder([normal('spade', 5), normal('heart', 5)], 5)).toEqual([0, 1])
   })
 })

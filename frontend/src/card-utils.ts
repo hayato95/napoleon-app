@@ -18,6 +18,33 @@ export function cardLabel(card: Card): string {
   return card.type === 'joker' ? 'ジョーカー' : `${SUIT_SYMBOL[card.suit]}${card.rank}`
 }
 
+// 手札の表示順。スートは左から ♥ → ♣ → ♦ → ♠、スートの中では 2 → A。ジョーカーは一番右。
+const HAND_SUIT_ORDER: Suit[] = ['heart', 'club', 'diamond', 'spade']
+const HAND_RANK_ORDER: Rank[] = [2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K', 'A']
+
+// 手札の中での並び位置を表す数。小さいほど左に並ぶ
+function handSortKey(card: Card): number {
+  if (card.type === 'joker') {
+    return HAND_SUIT_ORDER.length * HAND_RANK_ORDER.length // どのカードよりも大きい = 一番右
+  }
+  return HAND_SUIT_ORDER.indexOf(card.suit) * HAND_RANK_ORDER.length + HAND_RANK_ORDER.indexOf(card.rank)
+}
+
+/**
+ * 手札を表示する順番を返す。戻り値は「元の hand の何番目のカードか」を表示順に並べたもの。
+ * カードそのものではなく番号を返すのは、クリックされたカードを元の hand の番号で扱っている画面
+ * （トリック・カード交換）を変えずに済ませるため。
+ *
+ * unsortedTailCount を渡すと、hand の末尾のその枚数だけは並べ替えず、右端にそのままの順で置く。
+ * カード交換画面で、受け取った場札3枚（サーバーが手札の末尾に足す）を右端に並べるために使う。
+ */
+export function handDisplayOrder(hand: Card[], unsortedTailCount = 0): number[] {
+  const indexes = hand.map((_, index) => index)
+  const sortedCount = Math.max(0, hand.length - unsortedTailCount)
+  const sorted = indexes.slice(0, sortedCount).sort((a, b) => handSortKey(hand[a]) - handSortKey(hand[b]))
+  return [...sorted, ...indexes.slice(sortedCount)]
+}
+
 const PICTURE_RANKS: Rank[] = [10, 'J', 'Q', 'K', 'A']
 
 // 切り札と同じ色のスート（裏ジャックの判定に使う）
