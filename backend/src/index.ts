@@ -1,128 +1,26 @@
 import { createServer } from "node:http";
 import { Server } from "socket.io";
-import type { Card, Suit, Rank, Player, GameState, PlayerId } from "./types.js";
+import { buildStateUpdate, handleHumanAction, startGame } from "./game-flow.js";
+import { parsePlayerAction } from "./protocol.js";
+import type { GameState } from "./types.js";
 
-function createDeck(): Card[] {
-  const deck: Card[] = [];
-  const suits: Suit[] = ["spade", "diamond", "heart", "club"];
-  const ranks: Rank[] = [2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K", "A"];
- 
-  for (const suit of suits) {
-    for (const rank of ranks) {
-     
-      deck.push({
-  type: "normal",
-  suit: suit,
-  rank: rank
-});
-
-}
-
-}
-
-deck.push({
-    type: "joker"
-  });
-
-return deck;
-}
-
-function shuffleDeck(deck: Card[]): Card[] {
-for (let i = deck.length - 1; i > 0; i--) {
-const j = Math.floor(Math.random() * (i + 1));
-
-[deck[i], deck[j]] = [deck[j], deck[i]];
-}
-
-return deck;
-}
-
-function dealCards(deck: Card[]): { hands: Card[][]; widow: Card[] } {
-const hands: Card[][] = [[], [], [], [], []];
-
-for (let i = 0; i < 50; i++) {
-  const playerIndex = i % 5;
-  hands[playerIndex].push(deck[i]);
-}
-
-const widow = deck.slice(50);
-
-return {
-  hands,
-  widow
-};
-}
-
-function createPlayers(): Player[] {
-  return [
-    { id: 0, name: "Player 0", isHuman: true, hand: [] },
-    { id: 1, name: "Player 1", isHuman: true, hand: [] },
-    { id: 2, name: "Player 2", isHuman: true, hand: [] },
-    { id: 3, name: "Player 3", isHuman: true, hand: [] },
-    { id: 4, name: "Player 4", isHuman: true, hand: [] }
-  ];
-}
-
-function giveWidowToNapoleon(gameState: GameState): void {
-  if (gameState.napoleonId === null) {
-    return;
-  }
-
-  const napoleon = gameState.players[gameState.napoleonId];
-
-  napoleon.hand.push(...gameState.widow);
-  gameState.widow = [];
-}
-
-
-function setupDeal(): GameState {
-const deck = shuffleDeck(createDeck());
-const { hands, widow } = dealCards(deck);
-
-const players = createPlayers();
-
-for (let i = 0; i < players.length; i++) {
-  players[i].hand = hands[i];
-}
-
-const gameState: GameState = {
-  phase: "dealing",
-  players,
-  widow,
-
-  declarations: [],
-  trumpSuit: null,
-  declaredCount: null,
-
-  napoleonId: null,
-  fukukanCard: null,
-  fukukanId: null,
-  hitoridachi: false,
-  fukukanRevealed: false,
-
-  currentTrick: null,
-  trickHistory: [],
-  capturedCards: {
-    0: [],
-    1: [],
-    2: [],
-    3: [],
-    4: []
-  },
-  discardedCards: [],
-
-  turnOrder: [0, 1, 2, 3, 4]
-};
-
-return gameState;
-}
+// ソケット通信だけを担当する。ゲームの進め方は game-flow.ts、通信データの検証は protocol.ts にある。
+//
+// 人間は1人だけ（席0）。後から来た接続は断る。
+// どの席の操作かはクライアントに聞かず、サーバーが決める（クライアントが送る値は信用しない）。
+//
+// クライアント → サーバー:
+//   "action": PlayerAction（protocol.ts）… 宣言・パス・副官指名・捨て札・カードを出す
+// サーバー → クライアント:
+//   "hello":       { message } … 接続できたか、満員かのお知らせ
+//   "stateUpdate": StateUpdate … 状態が変わるたびに送る（自分に見せてよい情報だけ）
+//   "actionError": { message } … 届いた操作を受け付けられなかったとき
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN ?? "http://localhost:5173";
 
-let gameState = setupDeal();
-
-const connectedPlayers = new Map<string, PlayerId>();
+let humanSocketId: string | null = null;
+let game: GameState | null = null;
 
 const httpServer = createServer();
 const io = new Server(httpServer, {
@@ -132,77 +30,40 @@ const io = new Server(httpServer, {
 });
 
 io.on("connection", (socket) => {
-
-
   console.log(`client connected: ${socket.id}`);
 
-if (connectedPlayers.size >= 5) {
-  socket.emit("hello", {
-    message: "プレイヤーが満員です"
-  });
+  if (humanSocketId !== null) {
+    socket.emit("hello", { message: "プレイヤーが満員です" });
+    socket.disconnect();
+    return;
+  }
 
-  socket.disconnect();
-  return;
-}
+  humanSocketId = socket.id;
+  game = startGame(Math.random);
 
-const playerId = connectedPlayers.size as PlayerId;
-connectedPlayers.set(socket.id, playerId);
   socket.emit("hello", { message: "backendに接続できました" });
+  socket.emit("stateUpdate", buildStateUpdate(game));
 
-  const player = gameState.players[playerId];
+  socket.on("action", (raw: unknown) => {
+    if (game === null) {
+      return;
+    }
 
-socket.emit("yourHand", {
-  playerId: playerId,
-  hand: player.hand
-});
-
-  console.log(`Player ${playerId} として接続しました`);
-
-socket.on("napoleonSelected", (data: { playerId: PlayerId }) => {
-  gameState.napoleonId = data.playerId;
-
-  giveWidowToNapoleon(gameState);
-
-  socket.emit("napoleonHand", {
-    playerId: data.playerId,
-    hand: gameState.players[data.playerId].hand,
+    try {
+      game = handleHumanAction(game, parsePlayerAction(raw), Math.random);
+      socket.emit("stateUpdate", buildStateUpdate(game));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "操作を受け付けられませんでした";
+      socket.emit("actionError", { message });
+    }
   });
-});
-
-socket.on(
-  "discardCards",
-  (data: { cardIndexes: number[] }) => {
-    if (gameState.napoleonId === null) {
-      return;
-    }
-
-    if (data.cardIndexes.length !== 3) {
-      return;
-    }
-
-    const napoleon = gameState.players[gameState.napoleonId];
-
-    const indexes = [...data.cardIndexes].sort((a, b) => b - a);
-
-    for (const index of indexes) {
-      if (index < 0 || index >= napoleon.hand.length) {
-        return;
-      }
-    }
-
-    for (const index of indexes) {
-      napoleon.hand.splice(index, 1);
-    }
-
-    socket.emit("handAfterDiscard", {
-      playerId: gameState.napoleonId,
-      hand: napoleon.hand,
-    });
-  },
-);
 
   socket.on("disconnect", () => {
     console.log(`client disconnected: ${socket.id}`);
+    if (humanSocketId === socket.id) {
+      humanSocketId = null;
+      game = null;
+    }
   });
 });
 
