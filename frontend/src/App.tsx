@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { io } from 'socket.io-client'
 import './App.css'
 import { GameScreen } from './components/GameScreen'
+import { StartScreen } from './components/StartScreen'
 import type { PlayerAction, StateUpdate } from './protocol'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001'
@@ -10,6 +11,7 @@ type Socket = ReturnType<typeof io>
 
 function App() {
   const [status, setStatus] = useState('backendに接続中...')
+  const [accepted, setAccepted] = useState(false) // 満員で断られたときは false のまま
   const [update, setUpdate] = useState<StateUpdate | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const socketRef = useRef<Socket | null>(null)
@@ -22,8 +24,9 @@ function App() {
       setStatus('接続済み')
     })
 
-    socket.on('hello', (data: { message: string }) => {
+    socket.on('hello', (data: { message: string; accepted: boolean }) => {
       setStatus(data.message)
+      setAccepted(data.accepted)
     })
 
     socket.on('stateUpdate', (data: StateUpdate) => {
@@ -60,6 +63,7 @@ function App() {
         </p>
       )}
 
+      {update === null && accepted && <StartScreen onStart={() => send({ type: 'startGame' })} />}
       {update !== null && <GameScreen update={update} send={send} />}
     </main>
   )

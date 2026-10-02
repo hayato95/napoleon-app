@@ -52,6 +52,7 @@ export interface StateUpdate {
 
 // サーバーに送る操作（イベント名 "action"）。誰の操作かはサーバーが決めるので含めない
 export type PlayerAction =
+  | { type: 'startGame' }
   | { type: 'declare'; suit: Suit; count: number }
   | { type: 'pass' }
   | { type: 'nominateFukukan'; card: Card }
