@@ -1,327 +1,46 @@
-.counter {
-  font-size: 16px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  color: var(--accent);
-  background: var(--accent-bg);
-  border: 2px solid transparent;
-  transition: border-color 0.3s;
-  margin-bottom: 24px;
+/* =========================================================
+   対局画面のレイアウト（FR-72）
+   - PC：テーブル型。自分が手前、CPU が左・上・右から囲む
+   - スマホ：横向きのみ。縦に持ったときは画面全体を90度回して横向きで見せる
+   - 高さが足りない画面（スマホ横）では、縦に積むものを横に逃がして高さを節約する
+   ========================================================= */
 
-  &:hover {
-    border-color: var(--accent-border);
-  }
-  &:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
+:root {
+  --felt: #1f5e3b;
+  --felt-light: #2a7a4d;
+  --felt-dark: #174a2e;
+  --ink: #f3efe2;
+  --ink-muted: #b9c9bd;
+  --gold: #e8b931;
+  --silver: #9fc3ff;
+  --turn: #ffe066;
+  --red-suit: #ff8a8a;
+  --panel-bg: #10301f;
 }
 
-.hero {
-  position: relative;
-
-  .base,
-  .framework,
-  .vite {
-    inset-inline: 0;
-    margin: 0 auto;
-  }
-
-  .base {
-    width: 170px;
-    position: relative;
-    z-index: 0;
-  }
-
-  .framework,
-  .vite {
-    position: absolute;
-  }
-
-  .framework {
-    z-index: 1;
-    top: 34px;
-    height: 28px;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
-      scale(1.4);
-  }
-
-  .vite {
-    z-index: 0;
-    top: 107px;
-    height: 26px;
-    width: auto;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
-      scale(0.8);
-  }
-}
-
-#center {
+/* ---------- 画面全体 ---------- */
+.app-root {
+  min-height: 100svh;
   display: flex;
   flex-direction: column;
-  gap: 25px;
-  place-content: center;
-  place-items: center;
-  flex-grow: 1;
-
-  @media (max-width: 1024px) {
-    padding: 32px 20px 24px;
-    gap: 18px;
-  }
+  background: var(--felt-dark);
+  color: var(--ink);
 }
 
-#next-steps {
-  display: flex;
-  border-top: 1px solid var(--border);
-  text-align: left;
-
-  & > div {
-    flex: 1 1 0;
-    padding: 32px;
-    @media (max-width: 1024px) {
-      padding: 24px 20px;
-    }
-  }
-
-  .icon {
-    margin-bottom: 16px;
-    width: 22px;
-    height: 22px;
-  }
-
-  @media (max-width: 1024px) {
-    flex-direction: column;
-    text-align: center;
-  }
-}
-
-#docs {
-  border-right: 1px solid var(--border);
-
-  @media (max-width: 1024px) {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
-}
-
-#next-steps ul {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  gap: 8px;
-  margin: 32px 0 0;
-
-  .logo {
-    height: 18px;
-  }
-
-  a {
-    color: var(--text-h);
-    font-size: 16px;
-    border-radius: 6px;
-    background: var(--social-bg);
-    display: flex;
-    padding: 6px 12px;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    transition: box-shadow 0.3s;
-
-    &:hover {
-      box-shadow: var(--shadow);
-    }
-    .button-icon {
-      height: 18px;
-      width: 18px;
-    }
-  }
-
-  @media (max-width: 1024px) {
-    margin-top: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-
-    li {
-      flex: 1 1 calc(50% - 8px);
-    }
-
-    a {
-      width: 100%;
-      justify-content: center;
-      box-sizing: border-box;
-    }
-  }
-}
-
-#spacer {
-  height: 88px;
-  border-top: 1px solid var(--border);
-  @media (max-width: 1024px) {
-    height: 48px;
-  }
-}
-
-.hand {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-  padding: 16px 0;
-}
-
-.playing-card {
-  padding: 0;
-  border: 2px solid transparent;
-  border-radius: 8px;
-  background: none;
-  cursor: pointer;
-  line-height: 0;
-
-  img {
-    width: 72px;
-    height: auto;
-    border-radius: 6px;
-  }
-
-  &[data-selected='true'] {
-    border-color: red;
-  }
-
-  &[data-playable='false'] {
-    cursor: not-allowed;
-
-    img {
-      opacity: 0.4;
-      filter: grayscale(80%);
-    }
-  }
-}
-
-.declaration-screen {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  padding: 16px 0;
-}
-
-.declaration-suits {
-  display: flex;
-  gap: 8px;
-}
-
-.suit-button {
-  padding: 8px;
-  border: 2px solid var(--border);
-  border-radius: 8px;
-  background: none;
-  cursor: pointer;
-
-  img {
-    width: 32px;
-    height: 32px;
-  }
-
-  &[data-selected='true'] {
-    border-color: var(--accent);
-  }
-}
-
-.declaration-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.ticks {
-  position: relative;
-  width: 100%;
-
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: -4.5px;
-    border: 5px solid transparent;
-  }
-
-  &::before {
-    left: 0;
-    border-left-color: var(--border);
-  }
-  &::after {
-    right: 0;
-    border-right-color: var(--border);
-  }
-}
-
-
-.fukukan-nomination-screen {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  padding: 16px 0;
-}
-
-.fukukan-card-list {
-  width: min(100%, 900px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  padding: 16px;
-  overflow-x: auto;
-}
-
-.fukukan-card-row {
-  display: flex;
-  justify-content: center;
-  padding-left: 40px;
-}
-
-.fukukan-card-row .playing-card {
-  margin-left: -48px;
-  position: relative;
-}
-
-.fukukan-card-row .playing-card:first-child {
-  margin-left: 0;
-}
-
-.fukukan-card-row .playing-card:hover {
-  z-index: 10;
-  transform: translateY(-12px);
-}
-
-.fukukan-card-row .playing-card img {
-  width: 72px;
-}
-
-.fukukan-joker-row {
-  margin-top: 4px;
-}
-
-.fukukan-selected-card {
-  display: flex;
-  justify-content: center;
-  padding: 24px;
-}
-
-.fukukan-selected-card .playing-card img {
-  width: 180px;
-}
-
-.fukukan-confirm-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.fukukan-confirm-actions button {
-  padding: 10px 20px;
-  cursor: pointer;
+.app-root[data-playing='true'] {
+  height: 100svh;
+  overflow: hidden;
 }
 
 .action-error {
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  padding: 6px 16px;
+  border-radius: 8px;
+  background: #fff1f0;
   color: #b42318;
   font-weight: bold;
 }
@@ -335,102 +54,706 @@
   white-space: nowrap;
 }
 
+/* ---------- 開始前の画面 ---------- */
+.start-page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: radial-gradient(ellipse at center, var(--felt-light) 0%, var(--felt) 55%, var(--felt-dark) 100%);
+
+  h1 {
+    margin: 0;
+    color: var(--ink);
+    letter-spacing: 0.1em;
+  }
+}
+
+.connection-status {
+  color: var(--ink-muted);
+  font-size: 14px;
+}
+
+.start-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+/* ---------- 共通のボタン ---------- */
+.primary-button,
+.start-screen button {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 8px;
+  background: var(--gold);
+  color: #222;
+  font: inherit;
+  font-weight: bold;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+/* ---------- テーブルの枠 ---------- */
+.table-layout {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* 上部バー：タイトル・切り札などの情報・誰の番か */
+.table-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  padding: 6px 16px;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.table-title {
+  font-weight: bold;
+  letter-spacing: 0.1em;
+}
+
 .table-info {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 24px;
-  justify-content: center;
-  margin: 0 0 16px;
+  gap: 6px;
+  margin: 0;
 
   & > div {
     display: flex;
-    gap: 6px;
-  }
-
-  dt {
-    font-weight: bold;
+    gap: 4px;
+    padding: 1px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
+    font-size: 13px;
   }
 
   dd {
     margin: 0;
-  }
-}
-
-.trick-screen {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.seat-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-
-  li {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 8px 12px;
-    border: 2px solid var(--border);
-    border-radius: 8px;
-    font-size: 14px;
-  }
-
-  li[data-active='true'] {
-    border-color: var(--accent);
-  }
-
-  .role {
-    color: var(--accent);
+    color: var(--gold);
     font-weight: bold;
   }
 }
 
-.trick-table {
-  width: 100%;
+.turn-banner {
+  margin-left: auto;
+  padding: 2px 12px;
+  border-radius: 6px;
+  background: var(--turn);
+  color: #222;
+  font-weight: bold;
+}
 
-  h2,
-  h3 {
-    margin: 8px 0;
+/* フェルトの上：座席4つ・中央・重ねるパネル */
+.table-felt {
+  position: relative;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1.2fr 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    '. topLeft topRight .'
+    'left center center right';
+  gap: 8px;
+  padding: 12px 16px;
+  background: radial-gradient(ellipse at center, var(--felt-light) 0%, var(--felt) 55%, var(--felt-dark) 100%);
+}
+
+.seat-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.seat-topLeft {
+  grid-area: topLeft;
+}
+.seat-topRight {
+  grid-area: topRight;
+}
+.seat-left {
+  grid-area: left;
+}
+.seat-right {
+  grid-area: right;
+}
+
+.table-center {
+  grid-area: center;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border: 2px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 18px;
+  overflow: hidden;
+
+  h2 {
+    margin: 0 0 4px;
+    color: var(--ink);
   }
 }
 
-.trick-cards {
+/* 重ねるパネルの下敷き（テーブルを暗くして、パネルだけを目立たせる） */
+.table-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  align-items: center;
   justify-content: center;
+  padding: 8px;
+  background: rgba(5, 25, 14, 0.72);
+}
+
+.panel {
+  max-height: 100%;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border: 2px solid var(--gold);
+  border-radius: 14px;
+  background: var(--panel-bg);
+  color: var(--ink);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+  h2 {
+    margin: 0;
+    color: var(--ink);
+  }
+}
+
+/* 自分の手元：自分の座席と手札 */
+.table-mine {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px 12px;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.mine-hand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+}
+
+.hand-hint {
+  color: var(--turn);
+  font-weight: bold;
+  font-size: 14px;
+}
+
+/* ---------- 座席 ---------- */
+.seat {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.seat[data-me='true'] {
+  flex-direction: row;
+  gap: 12px;
+}
+
+.seat-badges {
+  display: flex;
+  gap: 4px;
+  min-height: 22px;
+  align-items: flex-end;
+}
+
+.badge {
+  padding: 1px 7px;
+  border-radius: 4px;
+  color: #222;
+  font-size: 12px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.badge-napoleon {
+  background: var(--gold);
+}
+
+.badge-fukukan {
+  background: var(--silver);
+}
+
+.badge-secret {
+  border: 1px dashed var(--silver);
+  background: transparent;
+  color: var(--silver);
+}
+
+.seat-plate {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 120px;
+  padding: 6px 10px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+
+  strong {
+    font-size: 15px;
+  }
+
+  span {
+    font-size: 12px;
+    color: var(--ink-muted);
+  }
+
+  .seat-note {
+    color: var(--ink);
+    font-weight: bold;
+    font-size: 14px;
+  }
+}
+
+/* 手番の人：札を黄色く光らせ、「▶ 手番」の印を付ける */
+.seat[data-turn='true'] .seat-plate {
+  border-color: var(--turn);
+  box-shadow:
+    0 0 0 3px rgba(255, 224, 102, 0.35),
+    0 0 18px rgba(255, 224, 102, 0.6);
+}
+
+.turn-tag {
+  position: absolute;
+  top: -11px;
+  right: -8px;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: var(--turn);
+  color: #222 !important;
+  font-size: 11px !important;
+  font-weight: bold;
+}
+
+/* 獲得した絵札（取った順に左から）。広い画面では絵、狭い画面では文字で見せる */
+.captured {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+}
+
+.captured-cards {
+  display: flex;
   list-style: none;
   margin: 0;
   padding: 0;
 
+  li + li {
+    margin-left: -18px;
+  }
+
+  img {
+    display: block;
+    width: 36px;
+    border-radius: 3px;
+    image-rendering: pixelated;
+  }
+}
+
+.captured-text {
+  display: none;
+  flex-wrap: wrap;
+  gap: 0 4px;
+  font-size: 12px;
+  font-weight: bold;
+
+  span[data-red='true'] {
+    color: var(--red-suit);
+  }
+}
+
+.captured-count {
+  color: var(--ink-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* ---------- カード ---------- */
+.hand {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.playing-card {
+  flex: 0 1 72px;
+  min-width: 0;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+  line-height: 0;
+  transition: transform 0.15s ease;
+
+  img {
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+    image-rendering: pixelated;
+  }
+
+  &[data-selected='true'] {
+    border-color: #ff5252;
+    transform: translateY(-8px);
+  }
+
+  &[data-playable='false'] {
+    cursor: not-allowed;
+
+    img {
+      opacity: 0.4;
+      filter: grayscale(80%);
+    }
+  }
+}
+
+/* 自分の番で出せるカードは、少し浮かせて光らせる */
+.table-layout[data-phase='trick'] .hand .playing-card[data-playable='true'] {
+  transform: translateY(-6px);
+  filter: drop-shadow(0 0 4px var(--turn));
+}
+
+/* ---------- 宣言 ---------- */
+.declaration-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.highest-declaration {
+  font-weight: bold;
+}
+
+.declaration-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.declaration-suits {
+  display: flex;
+  gap: 8px;
+}
+
+.suit-button {
+  padding: 6px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+
+  img {
+    display: block;
+    width: 28px;
+    height: 28px;
+  }
+
+  &[data-selected='true'] {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(232, 185, 49, 0.6);
+  }
+}
+
+.declaration-screen select {
+  font: inherit;
+  padding: 2px 6px;
+}
+
+.declaration-actions {
+  display: flex;
+  gap: 8px;
+
+  button {
+    padding: 6px 16px;
+    border: none;
+    border-radius: 8px;
+    font: inherit;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  button:first-child {
+    background: var(--gold);
+    color: #222;
+  }
+
+  button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+/* ---------- カード交換 ---------- */
+.card-exchange-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ---------- 副官指名パネル ---------- */
+.fukukan-panel h2 small {
+  margin-left: 8px;
+  font-size: 13px;
+  font-weight: normal;
+  color: var(--ink-muted);
+
+  b {
+    color: var(--gold);
+  }
+}
+
+.fukukan-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.fukukan-shortcut {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+
+  img {
+    width: 26px;
+    image-rendering: pixelated;
+  }
+
+  span {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+    text-align: left;
+  }
+
+  small {
+    color: var(--ink-muted);
+    font-size: 11px;
+  }
+
+  &[data-selected='true'] {
+    border-color: var(--gold);
+    background: rgba(232, 185, 49, 0.18);
+  }
+}
+
+.fukukan-pick {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.fukukan-pickers {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fukukan-picker {
+  display: grid;
+  grid-template-columns: 48px 32px 72px 32px;
+  align-items: center;
+  text-align: center;
+
+  button {
+    height: 30px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-radius: 6px;
+    background: none;
+    color: var(--ink);
+    font: inherit;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.25;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.fukukan-picker-label {
+  color: var(--ink-muted);
+  font-size: 12px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.fukukan-picker-value {
+  font-size: 22px;
+  font-weight: bold;
+  white-space: nowrap;
+
+  &[data-red='true'] {
+    color: var(--red-suit);
+  }
+}
+
+.fukukan-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--ink-muted);
+
+  img {
+    width: 64px;
+    image-rendering: pixelated;
+  }
+}
+
+/* ---------- 待ちのパネル（CPU が操作中） ---------- */
+.waiting-panel {
+  flex-direction: row;
+  gap: 0;
+  padding: 18px 30px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+/* 「．」が 0 → 1 → 2 → 3 個と増えていく */
+.waiting-dots::after {
+  content: '';
+  display: inline-block;
+  width: 3em;
+  text-align: left;
+  animation: waiting-dots 1.6s steps(1) infinite;
+}
+
+@keyframes waiting-dots {
+  0% {
+    content: '';
+  }
+  25% {
+    content: '．';
+  }
+  50% {
+    content: '．．';
+  }
+  75% {
+    content: '．．．';
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .waiting-dots::after {
+    animation: none;
+    content: '．．．';
+  }
+}
+
+/* ---------- トリック（場） ---------- */
+/* 場のカードは、出した人の座席の方向に置く */
+.trick-table {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-rows: auto auto auto;
+  grid-template-areas:
+    '. topLeft topRight .'
+    'left info info right'
+    '. bottom bottom .';
+  place-items: center;
+  gap: 4px;
+}
+
+.trick-cards {
+  display: contents;
+  list-style: none;
+
   li {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    font-size: 14px;
-  }
-
-  li[data-winner='true'] .playing-card {
-    border-color: var(--accent);
-  }
-
-  li {
+    gap: 2px;
+    font-size: 12px;
+    color: var(--ink-muted);
     transition:
       transform 0.4s ease,
       filter 0.4s ease;
   }
 
-  /* トリックが決まったら、勝者のカードを大きく、ほかを目立たなくする */
+  li[data-seat='topLeft'] {
+    grid-area: topLeft;
+  }
+  li[data-seat='topRight'] {
+    grid-area: topRight;
+  }
+  li[data-seat='left'] {
+    grid-area: left;
+  }
+  li[data-seat='right'] {
+    grid-area: right;
+  }
+  li[data-seat='bottom'] {
+    grid-area: bottom;
+  }
+
+  .playing-card {
+    width: 56px;
+    cursor: default;
+  }
+
+  li[data-latest='true'] .playing-card {
+    box-shadow: 0 0 0 3px #f59e0b;
+  }
+
+  /* トリックが決まったら、勝者のカードを大きく、ほかを目立たなくする（FR-39） */
   li[data-winner='true'] {
     transform: scale(1.2);
+    z-index: 1;
+  }
+
+  li[data-winner='true'] .playing-card {
+    border-color: var(--gold);
   }
 
   li[data-loser='true'] {
@@ -444,59 +767,70 @@
   }
 
   .trick-card-role {
-    font-size: 12px;
+    color: var(--gold);
+    font-size: 11px;
     font-weight: bold;
   }
+}
 
-  .playing-card {
-    cursor: default;
+.trick-player-name {
+  font-weight: bold;
+}
+
+.latest-badge {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  margin-left: 2px;
+  white-space: nowrap;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: #f59e0b;
+  color: #222;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.trick-info {
+  grid-area: info;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 13px;
+  color: var(--ink-muted);
+
+  strong {
+    font-size: 16px;
+    color: var(--ink);
   }
 }
 
 .joker-suit-picker {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
   justify-content: center;
+  margin-top: 4px;
 
   p {
     width: 100%;
-    margin: 0;
+    color: var(--turn);
   }
 
   button {
-    padding: 8px 16px;
+    padding: 4px 12px;
+    font: inherit;
     cursor: pointer;
   }
 }
 
-.turn-hint {
-  margin: 0;
-  font-weight: bold;
-}
-
-.start-screen {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  padding: 32px 0;
-
-  button {
-    padding: 12px 32px;
-    font-size: 18px;
-    cursor: pointer;
-  }
-}
-
+/* ---------- リザルト ---------- */
 .result-screen {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
+  width: min(100%, 900px);
+  gap: 6px;
 
-  h2,
   p {
     margin: 0;
   }
@@ -505,32 +839,33 @@
 .result-headline {
   font-size: 20px;
   font-weight: bold;
+  color: var(--gold);
 }
 
 .result-armies {
   display: flex;
   flex-wrap: wrap;
-  gap: 24px;
+  gap: 16px;
   justify-content: center;
   width: 100%;
-  margin-top: 16px;
+  margin-top: 8px;
 }
 
 .army-breakdown {
-  flex: 1 1 320px;
-  max-width: 480px;
-  padding: 12px 16px;
-  border: 2px solid var(--border);
+  flex: 1 1 300px;
+  max-width: 440px;
+  padding: 10px 14px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
   border-radius: 8px;
 
   h3 {
-    margin: 0 0 8px;
+    margin: 0 0 6px;
   }
 }
 
 .army-members {
   list-style: none;
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   padding: 0;
   font-size: 14px;
 }
@@ -541,93 +876,286 @@
   gap: 4px;
   justify-content: center;
   list-style: none;
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   padding: 0;
 
   .playing-card {
+    flex: 0 0 40px;
     cursor: default;
+  }
+}
 
-    img {
-      width: 48px;
+/* =========================================================
+   スマホ（横向きのみ）
+   縦に持ったときは、画面全体を90度回して、横向きのレイアウトで見せる
+   ========================================================= */
+@media (orientation: portrait) and (max-width: 600px) {
+  .app-root[data-playing='true'],
+  .app-root[data-playing='false'] {
+    position: fixed;
+    top: 0;
+    left: 100vw;
+    width: 100vh;
+    width: 100dvh;
+    height: 100vw;
+    min-height: 0;
+    transform-origin: top left;
+    transform: rotate(90deg);
+    overflow: hidden;
+  }
+}
+
+/* 高さが足りない画面（スマホ横向き・回した縦向き）：縦に積むものを横に逃がして高さを節約する */
+@media (orientation: landscape) and (max-height: 500px), (orientation: portrait) and (max-width: 600px) {
+  .app-root {
+    font-size: 12px;
+  }
+
+  .start-page h1 {
+    font-size: 28px;
+  }
+
+  .table-bar {
+    gap: 4px 8px;
+    padding: 2px 10px;
+  }
+
+  .table-title {
+    font-size: 13px;
+  }
+
+  .table-info > div {
+    padding: 0 7px;
+    font-size: 11px;
+  }
+
+  .turn-banner {
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
+  .table-felt {
+    grid-template-columns: 1fr 1.1fr 1.1fr 1fr;
+    gap: 4px;
+    padding: 12px 10px 4px;
+  }
+
+  .table-center {
+    padding: 2px 4px;
+
+    h2 {
+      display: none;
     }
   }
-}
 
-.restart-button {
-  padding: 10px 28px;
-  font-size: 16px;
-  cursor: pointer;
-}
+  /* 座席：名前の札の右に絵札を置き、バッジは札の上の縁に重ねる */
+  .seat,
+  .seat[data-me='true'] {
+    flex-direction: row;
+    gap: 6px;
+  }
 
-.trick-player-name {
-  font-weight: bold;
-}
+  .seat-badges {
+    position: absolute;
+    top: -13px;
+    left: 4px;
+    z-index: 2;
+    min-height: 0;
+  }
 
-.trick-cards li[data-latest='true'] .playing-card {
-  box-shadow: 0 0 0 3px #f59e0b;
-}
+  .badge {
+    padding: 0 4px;
+    font-size: 10px;
+  }
 
-.latest-badge {
-  font-size: 12px;
-  font-weight: bold;
-  color: #b45309;
-}
+  .seat-plate {
+    min-width: 76px;
+    padding: 4px 6px 3px;
 
-.captured-cards {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
-  list-style: none;
-  margin: 4px 0 0;
-  padding: 0;
-  max-width: 170px;
-  min-height: 0;
+    strong {
+      font-size: 12px;
+    }
 
-  img {
-    display: block;
+    span {
+      font-size: 10px;
+    }
+
+    .seat-note {
+      font-size: 12px;
+    }
+  }
+
+  .turn-tag {
+    top: auto;
+    bottom: -8px;
+    right: -6px;
+    font-size: 9px !important;
+  }
+
+  .captured {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    min-height: 0;
+    max-width: 92px;
+  }
+
+  .captured-cards {
+    display: none;
+  }
+
+  .captured-text {
+    display: flex;
+    font-size: 11px;
+  }
+
+  .captured-count {
+    font-size: 10px;
+  }
+
+  /* 自分の手元：座席を左、手札を右に並べて1行にする */
+  .table-mine {
+    flex-direction: row;
+    gap: 12px;
+    padding: 12px 10px 6px;
+  }
+
+  .seat-bottom {
+    flex: 0 0 auto;
+  }
+
+  .hand {
+    gap: 3px;
+  }
+
+  .playing-card {
+    flex-basis: 44px;
+  }
+
+  .hand-hint {
+    font-size: 11px;
+  }
+
+  .trick-cards {
+    li {
+      font-size: 9px;
+    }
+
+    .playing-card {
+      width: 34px;
+    }
+
+    .trick-card-role {
+      font-size: 9px;
+    }
+  }
+
+  /* 狭い画面では、直前のカードはオレンジの枠だけで示す（文字は端で切れるため出さない） */
+  .latest-badge {
+    display: none;
+  }
+
+  .trick-info {
+    font-size: 10px;
+
+    strong {
+      font-size: 12px;
+    }
+  }
+
+  /* 宣言：スート・枚数・ボタンを1行に並べる */
+  .declaration-center {
+    gap: 4px;
+  }
+
+  .declaration-screen {
+    flex-direction: row;
+    gap: 6px;
+  }
+
+  .suit-button img {
+    width: 20px;
+    height: 20px;
+  }
+
+  .suit-button {
+    padding: 3px;
+  }
+
+  .declaration-actions button,
+  .primary-button {
+    padding: 4px 12px;
+  }
+
+  /* パネル */
+  .panel {
+    gap: 6px;
+    padding: 8px 14px;
+
+    h2 {
+      font-size: 15px;
+    }
+  }
+
+  .fukukan-panel h2 small {
+    font-size: 11px;
+  }
+
+  .fukukan-shortcut {
+    padding: 3px 6px;
+    font-size: 11px;
+
+    img {
+      width: 20px;
+    }
+
+    small {
+      font-size: 9px;
+    }
+  }
+
+  .fukukan-pick {
+    gap: 14px;
+  }
+
+  .fukukan-picker {
+    grid-template-columns: 38px 26px 60px 26px;
+
+    button {
+      height: 24px;
+    }
+  }
+
+  .fukukan-picker-value {
+    font-size: 16px;
+  }
+
+  .fukukan-preview img {
     width: 40px;
-    height: auto;
-    border-radius: 3px;
-  }
-}
-
-.declaration-seats {
-  margin-bottom: 8px;
-
-  li {
-    min-width: 96px;
-    align-items: center;
   }
 
-  li[data-latest='true'] {
-    border-color: var(--accent);
-    background: var(--accent-bg);
+  .waiting-panel {
+    padding: 10px 20px;
+    font-size: 15px;
   }
 
-  li[data-next='true'] {
-    border-style: dashed;
-    border-color: var(--text);
+  .result-headline {
+    font-size: 15px;
   }
-}
 
-.declaration-text {
-  font-size: 16px;
-  font-weight: bold;
-  color: var(--text-h);
-}
+  .army-breakdown {
+    padding: 6px 10px;
 
-.seat-tag {
-  font-size: 12px;
-  font-weight: bold;
-  color: var(--accent);
-}
+    h3 {
+      font-size: 13px;
+    }
+  }
 
-.seat-tag-next {
-  color: var(--text);
-}
+  .army-members {
+    font-size: 11px;
+  }
 
-.highest-declaration {
-  margin: 8px 0 16px;
-  text-align: center;
-  font-weight: bold;
+  .result-cards .playing-card {
+    flex-basis: 28px;
+  }
 }

@@ -48,7 +48,7 @@ export function handDisplayOrder(hand: Card[], unsortedTailCount = 0): number[] 
 const PICTURE_RANKS: Rank[] = [10, 'J', 'Q', 'K', 'A']
 
 // 切り札と同じ色のスート（裏ジャックの判定に使う）
-const SAME_COLOR_SUIT: Record<Suit, Suit> = {
+export const SAME_COLOR_SUIT: Record<Suit, Suit> = {
   spade: 'club',
   club: 'spade',
   diamond: 'heart',

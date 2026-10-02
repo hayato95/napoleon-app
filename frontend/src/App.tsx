@@ -54,18 +54,25 @@ function App() {
     socketRef.current?.emit('action', action)
   }, [])
 
+  // 対局が始まったら、テーブル（GameScreen）だけを画面いっぱいに出す。
+  // 接続の状態などの開発用の表示は、開始前の画面にだけ出す（FR-72）
   return (
-    <main>
-      <h1>ナポレオン</h1>
-      <p>{status}</p>
+    <main className="app-root" data-playing={update !== null}>
       {actionError !== null && (
         <p role="alert" className="action-error">
           {actionError}
         </p>
       )}
 
-      {update === null && accepted && <StartScreen onStart={() => send({ type: 'startGame' })} />}
-      {update !== null && <GameScreen update={update} send={send} />}
+      {update === null ? (
+        <div className="start-page">
+          <h1>ナポレオン</h1>
+          <p className="connection-status">{status}</p>
+          {accepted && <StartScreen onStart={() => send({ type: 'startGame' })} />}
+        </div>
+      ) : (
+        <GameScreen update={update} send={send} />
+      )}
     </main>
   )
 }

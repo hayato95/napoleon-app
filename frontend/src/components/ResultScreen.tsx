@@ -2,7 +2,6 @@ import { playerName } from '../player-utils'
 import type { ArmySummary, PlayerView, StateUpdate } from '../protocol'
 import type { PlayerId } from '../types'
 import { PlayingCard } from './PlayingCard'
-import { TableInfo } from './TableInfo'
 
 interface ResultScreenProps {
   update: StateUpdate
@@ -21,7 +20,7 @@ export function ResultScreen({ update, onRestart }: ResultScreenProps) {
   const isOnNapoleonArmy = resultSummary.napoleonArmy.memberIds.includes(view.viewerId)
 
   return (
-    <section className="result-screen">
+    <section className="panel result-screen" role="dialog" aria-label="結果">
       <h2>{isOnNapoleonArmy === napoleonArmyWon ? 'あなたの勝ち' : 'あなたの負け'}</h2>
       <p className="result-headline">{napoleonArmyWon ? 'ナポレオン軍の勝利' : '連合軍の勝利'}</p>
       <p>
@@ -29,11 +28,9 @@ export function ResultScreen({ update, onRestart }: ResultScreenProps) {
         {shortage > 0 ? `（あと${shortage}枚足りませんでした）` : '（宣言を達成しました）'}
       </p>
 
-      <button type="button" className="restart-button" onClick={onRestart}>
+      <button type="button" className="primary-button restart-button" onClick={onRestart}>
         もう一度遊ぶ
       </button>
-
-      <TableInfo view={view} />
 
       {resultSummary.hitoridachi && <p>今回は独り立ち（副官なし）でした。</p>}
 
