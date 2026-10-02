@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { cardLabel, cardsEqual, SUIT_SYMBOL } from '../card-utils'
 import type { PlayerView, StateUpdate } from '../protocol'
 import type { Card, Suit, Trick } from '../types'
+import { CapturedCards } from './CapturedCards'
 import { Hand } from './Hand'
 import { PlayingCard } from './PlayingCard'
 import { playerName } from '../player-utils'
@@ -59,6 +60,7 @@ export function TrickScreen({ update, onPlay }: TrickScreenProps) {
             {view.fukukanRevealed && player.id === view.fukukanId && <span className="role">副官</span>}
             <span>手札 {player.handCount}枚</span>
             <span>絵札 {view.capturedCards[player.id].length}枚</span>
+            <CapturedCards playerId={player.id} cards={view.capturedCards[player.id]} />
           </li>
         ))}
       </ul>
