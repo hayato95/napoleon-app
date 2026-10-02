@@ -547,3 +547,17 @@
   font-size: 16px;
   cursor: pointer;
 }
+
+.trick-player-name {
+  font-weight: bold;
+}
+
+.trick-cards li[data-latest='true'] .playing-card {
+  box-shadow: 0 0 0 3px #f59e0b;
+}
+
+.latest-badge {
+  font-size: 12px;
+  font-weight: bold;
+  color: #b45309;
+}

@@ -69,7 +69,7 @@ export function TrickScreen({ update, onPlay }: TrickScreenProps) {
         </h2>
 
         {currentTrick !== null ? (
-          <TrickCards trick={currentTrick} view={view} />
+          <TrickCards trick={currentTrick} view={view} highlightLatest={true} />
         ) : (
           <p>{myTurn ? 'あなたがリードします。出すカードを選んでください。' : 'CPUの手番です。'}</p>
         )}
@@ -106,16 +106,20 @@ export function TrickScreen({ update, onPlay }: TrickScreenProps) {
 interface TrickCardsProps {
   trick: Trick
   view: PlayerView
+  highlightLatest?: boolean // 進行中のトリックで、直前に出たカードを目立たせる
 }
 
-function TrickCards({ trick, view }: TrickCardsProps) {
+function TrickCards({ trick, view, highlightLatest = false }: TrickCardsProps) {
+  const latestPlayerId = highlightLatest ? trick.plays[trick.plays.length - 1]?.playerId : undefined
+
   return (
     <ul className="trick-cards">
       {trick.plays.map((play) => (
-        <li key={play.playerId} data-winner={play.playerId === trick.winnerId}>
-          <span>{playerName(view, play.playerId)}</span>
+        <li key={play.playerId} data-winner={play.playerId === trick.winnerId} data-latest={play.playerId === latestPlayerId}>
+          <span className="trick-player-name">{playerName(view, play.playerId)}</span>
           <PlayingCard card={play.card} playable={true} />
           <span className="visually-hidden">{cardLabel(play.card)}</span>
+          {play.playerId === latestPlayerId && <span className="latest-badge">いま出した</span>}
         </li>
       ))}
     </ul>

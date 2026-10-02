@@ -1,6 +1,6 @@
 import { createServer } from "node:http";
 import { Server } from "socket.io";
-import { buildStateUpdate, handleHumanAction, startGame } from "./game-flow.js";
+import { buildStateUpdate, handleHumanActionSteps, startGameSteps } from "./game-flow.js";
 import { parsePlayerAction } from "./protocol.js";
 import type { GameState } from "./types.js";
 
@@ -13,7 +13,8 @@ import type { GameState } from "./types.js";
 //   "action": PlayerAction（protocol.ts）… ゲーム開始・宣言・パス・副官指名・捨て札・カードを出す
 // サーバー → クライアント:
 //   "hello":       { message, accepted } … 接続できたか、満員かのお知らせ。accepted が false なら満員
-//   "stateUpdate": StateUpdate … 状態が変わるたびに送る（自分に見せてよい情報だけ）
+//   "stateUpdates": StateUpdate[] … 操作のあと、人間の番が来るまでの途中の状態を順に並べて1回で送る（自分に見せてよい情報だけ）。
+//                    先頭が人間の操作を反映した直後、末尾が最終状態。CPUの手を1手ずつ見せるため、クライアントが間を置いて順に表示する
 //   "actionError": { message } … 届いた操作を受け付けられなかったとき
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
@@ -46,20 +47,26 @@ io.on("connection", (socket) => {
     try {
       const action = parsePlayerAction(raw);
 
+      let steps: GameState[];
       if (action.type === "startGame") {
         // 対局の途中で作り直されないよう、始められるのは「まだ始めていない」か「終わっている」ときだけ
         if (game !== null && game.phase !== "result") {
           throw new Error("対局はすでに始まっています");
         }
-        game = startGame(Math.random);
+        steps = startGameSteps(Math.random);
       } else {
         if (game === null) {
           throw new Error("まだ対局が始まっていません");
         }
-        game = handleHumanAction(game, action, Math.random);
+        steps = handleHumanActionSteps(game, action, Math.random);
       }
 
-      socket.emit("stateUpdate", buildStateUpdate(game));
+      // 送る内容を先に全部作る。途中で例外が出ても、サーバーの状態だけ進んでクライアントとずれることがないようにするため
+      const updates = steps.map((step) => buildStateUpdate(step));
+
+      // サーバーが持つ状態は最終状態。途中の状態は、画面で順に見せるために送るだけ
+      game = steps[steps.length - 1];
+      socket.emit("stateUpdates", updates);
     } catch (error) {
       const message = error instanceof Error ? error.message : "操作を受け付けられませんでした";
       socket.emit("actionError", { message });
