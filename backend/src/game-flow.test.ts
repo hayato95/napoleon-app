@@ -67,6 +67,12 @@ describe("game-flow: ゲーム開始", () => {
     expect(() => handleHumanAction(outOfTurn, { type: "pass" }, rng)).toThrow("あなたの番ではありません");
   });
 
+  it("対局の途中で startGame を送っても、対局は作り直されない", () => {
+    const rng = seededRng(1);
+    const state = startGame(rng);
+    expect(() => handleHumanAction(state, { type: "startGame" }, rng)).toThrow("今はその操作はできません");
+  });
+
   it("フェーズに合わない操作は拒否する", () => {
     const rng = seededRng(1);
     const state = startGame(rng);
@@ -228,6 +234,7 @@ describe("cpu-discard-fallback: 暫定のCPUの捨て札選び", () => {
 
 describe("protocol: parsePlayerAction", () => {
   it("正しい操作はそのまま変換される", () => {
+    expect(parsePlayerAction({ type: "startGame" })).toEqual({ type: "startGame" });
     expect(parsePlayerAction({ type: "pass" })).toEqual({ type: "pass" });
     expect(parsePlayerAction({ type: "declare", suit: "heart", count: 13 })).toEqual({
       type: "declare",

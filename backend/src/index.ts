@@ -10,9 +10,9 @@ import type { GameState } from "./types.js";
 // どの席の操作かはクライアントに聞かず、サーバーが決める（クライアントが送る値は信用しない）。
 //
 // クライアント → サーバー:
-//   "action": PlayerAction（protocol.ts）… 宣言・パス・副官指名・捨て札・カードを出す
+//   "action": PlayerAction（protocol.ts）… ゲーム開始・宣言・パス・副官指名・捨て札・カードを出す
 // サーバー → クライアント:
-//   "hello":       { message } … 接続できたか、満員かのお知らせ
+//   "hello":       { message, accepted } … 接続できたか、満員かのお知らせ。accepted が false なら満員
 //   "stateUpdate": StateUpdate … 状態が変わるたびに送る（自分に見せてよい情報だけ）
 //   "actionError": { message } … 届いた操作を受け付けられなかったとき
 
@@ -33,24 +33,32 @@ io.on("connection", (socket) => {
   console.log(`client connected: ${socket.id}`);
 
   if (humanSocketId !== null) {
-    socket.emit("hello", { message: "プレイヤーが満員です" });
+    socket.emit("hello", { message: "プレイヤーが満員です", accepted: false });
     socket.disconnect();
     return;
   }
 
+  // 接続しただけではゲームは始まらない。人間が "startGame" を送ったときに始める（FR-45）
   humanSocketId = socket.id;
-  game = startGame(Math.random);
-
-  socket.emit("hello", { message: "backendに接続できました" });
-  socket.emit("stateUpdate", buildStateUpdate(game));
+  socket.emit("hello", { message: "backendに接続できました", accepted: true });
 
   socket.on("action", (raw: unknown) => {
-    if (game === null) {
-      return;
-    }
-
     try {
-      game = handleHumanAction(game, parsePlayerAction(raw), Math.random);
+      const action = parsePlayerAction(raw);
+
+      if (action.type === "startGame") {
+        // 対局の途中で作り直されないよう、始められるのは「まだ始めていない」か「終わっている」ときだけ
+        if (game !== null && game.phase !== "result") {
+          throw new Error("対局はすでに始まっています");
+        }
+        game = startGame(Math.random);
+      } else {
+        if (game === null) {
+          throw new Error("まだ対局が始まっていません");
+        }
+        game = handleHumanAction(game, action, Math.random);
+      }
+
       socket.emit("stateUpdate", buildStateUpdate(game));
     } catch (error) {
       const message = error instanceof Error ? error.message : "操作を受け付けられませんでした";
