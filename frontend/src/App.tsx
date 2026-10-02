@@ -1,47 +1,66 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { io } from 'socket.io-client'
 import './App.css'
-import { FukukanNominationScreen } from './components/FukukanNominationScreen'
+import { GameScreen } from './components/GameScreen'
+import type { PlayerAction, StateUpdate } from './protocol'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001'
 
+type Socket = ReturnType<typeof io>
+
 function App() {
   const [status, setStatus] = useState('backendに接続中...')
+  const [update, setUpdate] = useState<StateUpdate | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
+  const socketRef = useRef<Socket | null>(null)
 
   useEffect(() => {
-    const newSocket = io(BACKEND_URL)
+    const socket = io(BACKEND_URL)
+    socketRef.current = socket
 
-    newSocket.on('connect', () => {
-      setStatus('接続済み。イベント待機中...')
+    socket.on('connect', () => {
+      setStatus('接続済み')
     })
 
-    newSocket.on('hello', (data: { message: string }) => {
+    socket.on('hello', (data: { message: string }) => {
       setStatus(data.message)
     })
 
-    newSocket.on('connect_error', () => {
+    socket.on('stateUpdate', (data: StateUpdate) => {
+      setActionError(null)
+      setUpdate(data)
+    })
+
+    socket.on('actionError', (data: { message: string }) => {
+      setActionError(data.message)
+    })
+
+    socket.on('connect_error', () => {
       setStatus('backendへの接続に失敗しました')
     })
 
     return () => {
-      newSocket.disconnect()
+      socket.disconnect()
+      socketRef.current = null
     }
+  }, [])
+
+  const send = useCallback((action: PlayerAction) => {
+    setActionError(null)
+    socketRef.current?.emit('action', action)
   }, [])
 
   return (
     <main>
-      <h1>napoleon-app 疎通確認</h1>
+      <h1>ナポレオン</h1>
       <p>{status}</p>
+      {actionError !== null && (
+        <p role="alert" className="action-error">
+          {actionError}
+        </p>
+      )}
 
-      <div>
-    
-
-        <FukukanNominationScreen
-          onSelect={(card) => {
-            console.log('副官指定カード:', card)
-          }}
-        />
-      </div>
+      {update !== null && <GameScreen update={update} send={send} />}
     </main>
   )
 }
