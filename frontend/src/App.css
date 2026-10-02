@@ -11,6 +11,7 @@
   &:hover {
     border-color: var(--accent-border);
   }
+
   &:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
@@ -78,6 +79,7 @@
   & > div {
     flex: 1 1 0;
     padding: 32px;
+
     @media (max-width: 1024px) {
       padding: 24px 20px;
     }
@@ -130,6 +132,7 @@
     &:hover {
       box-shadow: var(--shadow);
     }
+
     .button-icon {
       height: 18px;
       width: 18px;
@@ -156,6 +159,7 @@
 #spacer {
   height: 88px;
   border-top: 1px solid var(--border);
+
   @media (max-width: 1024px) {
     height: 48px;
   }
@@ -248,12 +252,12 @@
     left: 0;
     border-left-color: var(--border);
   }
+
   &::after {
     right: 0;
     border-right-color: var(--border);
   }
 }
-
 
 .fukukan-nomination-screen {
   display: flex;
@@ -320,10 +324,6 @@
   padding: 10px 20px;
   cursor: pointer;
 }
-
-/* ========================================
-   main側の既存トリック画面
-   ======================================== */
 
 .action-error {
   color: #b42318;
@@ -405,11 +405,7 @@
   }
 }
 
-/* ========================================
-   既存トリック表示
-   ======================================== */
-
-.trick-screen .trick-cards {
+.trick-cards {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -434,163 +430,6 @@
     cursor: default;
   }
 }
-
-/* ========================================
-   FR-39 トリック進行表示
-   ======================================== */
-
-.fr39-trick-display {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  padding: 24px 16px;
-}
-
-.fr39-trick-display h2 {
-  margin: 0;
-}
-
-.fr39-trick-cards {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 20px;
-  min-height: 190px;
-}
-
-.fr39-trick-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-
-  transition:
-    transform 0.35s ease,
-    opacity 0.35s ease,
-    filter 0.35s ease;
-
-  animation: trick-card-play 0.7s ease-out;
-}
-
-.fr39-trick-player {
-  font-weight: bold;
-  white-space: nowrap;
-}
-
-.fr39-trick-card-image {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.fr39-trick-card-image .playing-card {
-  cursor: default;
-}
-
-.fr39-trick-card-image .playing-card img {
-  width: 100px;
-}
-
-.fr39-trick-card-label {
-  min-height: 24px;
-  font-size: 16px;
-  font-weight: bold;
-  white-space: nowrap;
-}
-
-@keyframes trick-card-play {
-  0% {
-    transform: scale(1);
-  }
-
-  35% {
-    transform: scale(1.18);
-  }
-
-  100% {
-    transform: scale(1);
-  }
-}
-
-/* ========================================
-   FR-39 勝者演出
-   ======================================== */
-
-.fr39-trick-cards[data-winner-animation='true']
-  .fr39-trick-card[data-loser='true'] {
-  filter: blur(4px);
-  opacity: 0.45;
-  transform: scale(0.9);
-}
-
-.fr39-trick-cards[data-winner-animation='true']
-  .fr39-trick-card[data-winner='true'] {
-  position: relative;
-  z-index: 10;
-  transform: scale(1.5);
-}
-
-.fr39-trick-cards[data-winner-animation='true']
-  .fr39-trick-card[data-winner='true']
-  .fr39-trick-card-label {
-  font-size: 18px;
-}
-
-.fr39-trick-winner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-
-  animation: trick-winner-appear 0.35s ease-out;
-}
-
-.fr39-trick-winner-player {
-  font-size: 20px;
-  font-weight: bold;
-}
-
-.fr39-trick-winner-reason {
-  font-size: 24px;
-  font-weight: bold;
-}
-
-@keyframes trick-winner-appear {
-  0% {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-/* ========================================
-   FR-39 フェーズ確認用
-   ======================================== */
-
-.phase-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 32px 16px;
-}
-
-.phase-placeholder h2 {
-  margin: 0;
-}
-
-.phase-placeholder p {
-  margin: 0;
-}
-
-/* ========================================
-   既存ゲーム画面
-   ======================================== */
 
 .joker-suit-picker {
   display: flex;

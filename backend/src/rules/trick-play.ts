@@ -4,6 +4,7 @@ import { cardsEqual } from "./trick-start.js";
 import { canPlayCard } from "./card-follow.js";
 import { revealFukukanIfPlayed } from "./fukukan-reveal.js";
 import { captureFaceCards } from "./face-card-capture.js";
+import { finishRoundIfAllTricksDone } from "./trick-loop.js";
 
 function getNextPlayerId(
   state: GameState,
@@ -85,7 +86,8 @@ export function playCard(
     // FR-20: トリックの勝者が、そのトリックに含まれる絵札を獲得する
     state = captureFaceCards(state, completedTrickWithWinner);
 
-    return {
+    // FR-21: 10トリック目が終わったら、勝敗判定(result)フェーズに進む
+    return finishRoundIfAllTricksDone({
       ...state,
       players: state.players.map((p) =>
         p.id === playerId
@@ -102,7 +104,7 @@ export function playCard(
         ...state.trickHistory,
         completedTrickWithWinner,
       ],
-    };
+    });
   }
 
   return {
