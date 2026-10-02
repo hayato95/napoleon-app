@@ -15,6 +15,7 @@ import { judgeGameResult } from "./rules/game-result.js";
 import { determineNapoleon } from "./rules/napoleon-decision.js";
 import { toPlayerView } from "./rules/player-view.js";
 import { shouldRedeal } from "./rules/redeal.js";
+import { summarizeResult } from "./rules/result-summary.js";
 import { playCard } from "./rules/trick-play.js";
 import { cardsEqual, playLeadCard } from "./rules/trick-start.js";
 
@@ -110,6 +111,7 @@ export function buildStateUpdate(state: GameState, viewerId: PlayerId = HUMAN_SE
     actorId,
     playableCards,
     result: state.phase === "result" ? judgeGameResult(state) : null,
+    resultSummary: state.phase === "result" ? summarizeResult(state) : null,
   };
 }
 

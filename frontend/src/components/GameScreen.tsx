@@ -1,11 +1,10 @@
-import { cardLabel } from '../card-utils'
 import type { PlayerAction, StateUpdate } from '../protocol'
 import { CardExchangeScreen } from './CardExchangeScreen'
 import { DeclarationHistory } from './DeclarationHistory'
 import { DeclarationScreen } from './DeclarationScreen'
 import { FukukanNominationScreen } from './FukukanNominationScreen'
 import { Hand } from './Hand'
-import { playerName } from '../player-utils'
+import { ResultScreen } from './ResultScreen'
 import { TableInfo } from './TableInfo'
 import { TrickScreen } from './TrickScreen'
 
@@ -16,7 +15,7 @@ interface GameScreenProps {
 
 // サーバーから届いた phase を見て、どの画面を出すかを選ぶ
 export function GameScreen({ update, send }: GameScreenProps) {
-  const { view, actorId, result } = update
+  const { view, actorId } = update
   const myTurn = actorId === view.viewerId
   const waiting = <p>他のプレイヤーの操作を待っています。</p>
 
@@ -77,25 +76,7 @@ export function GameScreen({ update, send }: GameScreenProps) {
       )
 
     case 'result':
-      // リザルト画面（FR-42, #51）ができるまでの仮表示
-      return (
-        <div>
-          <TableInfo view={view} />
-          <h2>対局終了</h2>
-          {result !== null && (
-            <p>
-              {result.winner === 'napoleonArmy' ? 'ナポレオン軍の勝ち' : '連合軍の勝ち'}（ナポレオン軍{' '}
-              {result.napoleonArmyCount}枚 / 宣言 {result.declaredCount}枚）
-            </p>
-          )}
-          {view.fukukanCard !== null && (
-            <p>
-              副官指定カード: {cardLabel(view.fukukanCard)}
-              {view.fukukanId !== null && `（副官: ${playerName(view, view.fukukanId)}）`}
-            </p>
-          )}
-        </div>
-      )
+      return <ResultScreen update={update} onRestart={() => send({ type: 'startGame' })} />
 
     case 'dealing':
       return null

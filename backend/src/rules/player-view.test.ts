@@ -152,6 +152,34 @@ describe("FR-10: toPlayerView（FR-12で公開された後）", () => {
   });
 });
 
+describe("toPlayerView（対局終了後の公開）", () => {
+  it("勝敗判定フェーズでは、副官が公開されていなくても全員に誰が副官か分かる", () => {
+    for (const id of PLAYER_IDS) {
+      expect(toPlayerView(createState({ phase: "result" }), id).fukukanId).toBe(3);
+    }
+  });
+
+  it("勝敗判定フェーズでは、独り立ちだったことも全員に分かる", () => {
+    for (const id of PLAYER_IDS) {
+      // ナポレオン(0番)以外は、終了前は独り立ちかどうか分からない
+      if (id !== 0) {
+        expect(toPlayerView(hitoridachiState(), id).hitoridachi).toBeNull();
+      }
+      expect(toPlayerView({ ...hitoridachiState(), phase: "result" }, id).hitoridachi).toBe(true);
+    }
+  });
+
+  it("勝敗判定フェーズより前は、これまでどおり副官本人にしか副官が分からない", () => {
+    expect(toPlayerView(createState({ phase: "trick" }), 1).fukukanId).toBeNull();
+    expect(toPlayerView(createState({ phase: "trick" }), 3).fukukanId).toBe(3);
+  });
+
+  it("勝敗判定フェーズでも、他人の手札の中身は見えない", () => {
+    const view = toPlayerView(createState({ phase: "result" }), 1);
+    expect(view.players.find((player) => player.id === 2)).not.toHaveProperty("hand");
+  });
+});
+
 describe("toPlayerView（その他）", () => {
   it("存在しないプレイヤーIDならエラー", () => {
     const state = createState({ players: [createPlayer(0)] });
