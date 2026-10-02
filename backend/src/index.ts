@@ -61,12 +61,12 @@ io.on("connection", (socket) => {
         steps = handleHumanActionSteps(game, action, Math.random);
       }
 
+      // 送る内容を先に全部作る。途中で例外が出ても、サーバーの状態だけ進んでクライアントとずれることがないようにするため
+      const updates = steps.map((step) => buildStateUpdate(step));
+
       // サーバーが持つ状態は最終状態。途中の状態は、画面で順に見せるために送るだけ
       game = steps[steps.length - 1];
-      socket.emit(
-        "stateUpdates",
-        steps.map((step) => buildStateUpdate(step)),
-      );
+      socket.emit("stateUpdates", updates);
     } catch (error) {
       const message = error instanceof Error ? error.message : "操作を受け付けられませんでした";
       socket.emit("actionError", { message });
