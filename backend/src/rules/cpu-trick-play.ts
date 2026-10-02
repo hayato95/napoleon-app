@@ -15,9 +15,19 @@ import { isMighty } from "./yoromeki.js";
 // - 連合軍CPU:
 //     絵札が出ているトリックで、勝てそうなら「勝てる中で一番弱いカード」で勝ちにいく。
 //     勝てそうになければ一番弱いカードを出して温存する。
-//     絵札が出ていないトリック（自分が親のときを含む）は、一番弱いカードで温存する。
+//     絵札が出ていないトリックは、一番弱いカードで温存する。
 //     絵札が出ているトリックでは、15%の確率でわざと判断を誤る（勝てるのに温存する／勝てないのに一番強いカードを出す）。
-// - 副官CPUは、ここでは連合軍CPUと同じロジックで動く（FR-34で、終盤にナポレオン側の動きへ切り替える処理を追加する想定）。
+//     自分が親のときは、副官指定カードと同じスートの一番弱いカードを出す（副官をあぶり出す）。無ければ一番弱いカード。
+// - 副官CPU（FR-34）:
+//     基本は連合軍CPUと全く同じロジックで動き、見分けがつかないようにする。
+//     ただし、ナポレオンが勝てそうで、そのスートが台札になるのが2回目以降なら、一番弱い絵札を渡す。
+//     副官指定カードは、他に出せるカードがある限り出さない（出した瞬間に正体が公開されるため）。
+//     正体が公開された後、または7トリック目以降は、隠すのをやめてナポレオン側として動く:
+//       ナポレオンが勝てそうなら一番弱い絵札を渡す（無ければ一番弱いカード）。
+//       それ以外で、自分が勝てる（または自分が親）なら一番強いカードを出す。
+//       勝てないトリックには絵札を出さない（絵札以外で一番弱いカードを出す）。
+//     ※ FR-71（終盤に絵札を乗せる／不利なトリックでは絵札を出さない）も、この動きに含まれる。
+//       FR-71のissueは「9・10トリック目から」だが、ここでは7トリック目から（FUKUKAN_CPU_OPEN_FROM_TRICK）にしている。
 //
 // 割り切っているところ:
 //   - 「勝てそうか」は、すでに出ているカードとだけ比べる（後から出す人のカードは分からないので考えない）
@@ -28,6 +38,11 @@ import { isMighty } from "./yoromeki.js";
 export const NAPOLEON_CPU_MISPLAY_RATE = 0.2;
 // 連合軍CPUが、絵札が出ているトリックでわざと判断を誤る確率
 export const ALLIED_CPU_MISJUDGE_RATE = 0.15;
+// FR-34: 副官CPUは、正体が公開されていなくても、このトリック目からはナポレオン側として動く（全10トリック）
+export const FUKUKAN_CPU_OPEN_FROM_TRICK = 7;
+
+// getCardStrength の tier で、切り札（役札を除く）を表す値。これ以下なら切り札か役札
+const TRUMP_TIER = 5;
 
 export interface CpuTrickChoice {
   card: Card;
@@ -65,23 +80,57 @@ export function chooseCpuTrickCard(view: PlayerView, random: number): CpuTrickCh
     throw new Error("出せるカードがありません");
   }
 
+  const isNapoleon = view.viewerId === view.napoleonId;
+  const trickNumber = view.trickHistory.length + 1; // 今が何トリック目か（1〜10）
+
+  // FR-34: 副官CPUが正体を隠すのをやめて、ナポレオン側として動くか
+  const fukukanActsOpenly =
+    view.isFukukan && (view.fukukanRevealed || trickNumber >= FUKUKAN_CPU_OPEN_FROM_TRICK);
+
+  // FR-34: 正体を隠している間の副官CPUは、副官指定カードを出さない（出した瞬間に正体が公開されるため）。
+  // マストフォローなどで副官指定カードしか出せないときだけ、仕方なく出す。
+  const candidates = view.isFukukan && !fukukanActsOpenly ? withoutFukukanCard(playable, view.fukukanCard) : playable;
+
   // 強い順に並べる（[0]が一番強い、最後が一番弱い）
-  const sorted = sortStrongestFirst(playable, plays, trumpSuit, leadJokerSuit);
+  const sorted = sortStrongestFirst(candidates, plays, trumpSuit, leadJokerSuit);
   const strongest = sorted[0];
   const weakest = sorted[sorted.length - 1];
 
   let card: Card;
 
-  if (view.viewerId === view.napoleonId) {
-    // --- ナポレオンCPU ---
+  // FR-34: 副官CPUが、ナポレオンが勝てそうなトリックに絵札を渡すか。
+  // 正体を隠している間は、そのスートが台札になるのが2回目以降のときだけ（最序盤は連合軍と見分けがつかないようにする）
+  const napoleonLikelyToWin = view.isFukukan && isNapoleonLikelyToWin(view, plays, trumpSuit, leadJokerSuit);
+  const feedNapoleon =
+    napoleonLikelyToWin && (fukukanActsOpenly || isLeadSuitSeenBefore(view, plays, trumpSuit, leadJokerSuit));
+
+  // 渡す絵札の候補。オールマイティ・正ジャック・裏ジャックは強すぎてもったいないので渡さない（強い順のまま）
+  const feedableFaceCards = sorted.filter(
+    (c) => isFaceCard(c) && strengthOf(c, plays, trumpSuit, leadJokerSuit).tier >= TRUMP_TIER,
+  );
+
+  if (feedNapoleon && feedableFaceCards.length > 0) {
+    // --- 副官CPU: ナポレオンに一番弱い絵札を渡す ---
+    card = feedableFaceCards[feedableFaceCards.length - 1];
+  } else if (fukukanActsOpenly && napoleonLikelyToWin) {
+    // --- 副官CPU（正体を隠さない）: ナポレオンが勝てそうで渡す絵札もない → 強いカードを無駄にしない ---
+    card = weakest;
+  } else if (fukukanActsOpenly && !canBeatCurrentBest(sorted, plays, trumpSuit, leadJokerSuit)) {
+    // --- 副官CPU（正体を隠さない）: 勝てないトリックには絵札を出さない（FR-71: ナポレオンが不利なトリックでは絵札を出さない） ---
+    card = weakestAvoidingFaceCard(sorted);
+  } else if (isNapoleon || fukukanActsOpenly) {
+    // --- ナポレオンCPU、および正体を隠さなくなった副官CPU（勝てる場面・自分が親の場面） ---
     const misplay = sorted.length >= 2 && random < NAPOLEON_CPU_MISPLAY_RATE;
     card = misplay ? sorted[1] : strongest;
   } else {
-    // --- 連合軍CPU（副官CPUもここ） ---
+    // --- 連合軍CPU（正体を隠している副官CPUもここ） ---
     const hasFaceCard = plays.some((play) => isFaceCard(play.card));
 
-    if (!hasFaceCard) {
-      // 絵札が出ていない（自分が親のときを含む）→ 温存
+    if (plays.length === 0) {
+      // 自分が親 → 副官指定カードのスートで回して副官をあぶり出す。そのスートが無ければ一番弱いカード
+      card = chooseAlliedLeadCard(view, sorted);
+    } else if (!hasFaceCard) {
+      // 絵札が出ていない → 温存
       card = weakest;
     } else {
       // 今トリックで一番強いカードに勝てるカードだけを集める（強い順のまま）
@@ -125,12 +174,7 @@ export function chooseCpuTrickCard(view: PlayerView, random: number): CpuTrickCh
  * だけで数える。他人の手札は見ない。
  */
 export function chooseLeadJokerSuit(view: PlayerView, trumpSuit: Suit): Suit {
-  const knownCards: Card[] = [
-    ...view.myHand,
-    ...view.trickHistory.flatMap((trick) => trick.plays.map((play) => play.card)),
-    ...(view.currentTrick?.plays.map((play) => play.card) ?? []),
-    ...view.discardedCards,
-  ];
+  const knownCards = knownCardsOf(view);
 
   const mightyIsSafe = knownCards.some((card) => isMighty(card)); // 自分が持っているか、もう出ている
   const candidates = SUIT_STRENGTH_ORDER.filter((suit) => suit !== "spade" || mightyIsSafe);
@@ -152,6 +196,144 @@ export function chooseLeadJokerSuit(view: PlayerView, trumpSuit: Suit): Suit {
 
 // 1スートあたりの絵札の枚数（A・K・Q・J・10）
 const FACE_CARDS_PER_SUIT = 5;
+
+/**
+ * 連合軍CPUが親のときに出すカードを決める。
+ * 副官指定カードと同じスートを持っていれば、その中で一番弱いカードを出す（そのスートを回して、
+ * 副官指定カードを持っている人に出させる = 副官をあぶり出す）。
+ * 次の場合は、これまでどおり手札で一番弱いカードを出す:
+ *   - 副官がもう公開されている（あぶり出す必要がない）
+ *   - 副官指定カードがジョーカー（スートが無い）
+ *   - そのスートのカードを持っていない（副官指定カードそのものは数えない）
+ * @param sorted 出せるカードを強い順に並べたもの
+ */
+function chooseAlliedLeadCard(view: PlayerView, sorted: Card[]): Card {
+  const weakest = sorted[sorted.length - 1];
+  const fukukanCard = view.fukukanCard;
+
+  if (view.fukukanRevealed || fukukanCard === null || fukukanCard.type === "joker") {
+    return weakest;
+  }
+
+  // 副官指定カードそのものは選ばない（持っているのは副官CPUだけ。自分から正体を明かさないようにする）
+  const sameSuitCards = sorted.filter(
+    (c) => c.type === "normal" && c.suit === fukukanCard.suit && !sameCard(c, fukukanCard),
+  );
+  return sameSuitCards.length > 0 ? sameSuitCards[sameSuitCards.length - 1] : weakest;
+}
+
+/**
+ * FR-34: 副官CPUから見て、このトリックはナポレオンが勝てそうか。
+ * ナポレオンがもうカードを出していて、それが今一番強く、さらに次のどちらかのとき true:
+ *   (a) 台札が切り札以外で、ナポレオンが切り札（または役札）を出している
+ *   (b) ナポレオンのカードより強いカードが、もう残っていない
+ *       （台札が切り札以外なら台札のスートの中で、台札が切り札なら全てのカードの中で調べる）
+ * 「残っているか」は、副官CPUから見える情報（自分の手札・これまでに出たカード・公開された捨て札）だけで判断する。
+ * セイム2・よろめきによる逆転は考えていない。
+ */
+function isNapoleonLikelyToWin(
+  view: PlayerView,
+  plays: TrickPlay[],
+  trumpSuit: Suit,
+  leadJokerSuit: Suit | undefined,
+): boolean {
+  const napoleonPlay = plays.find((play) => play.playerId === view.napoleonId);
+  if (napoleonPlay === undefined) {
+    return false; // ナポレオンはまだ出していない
+  }
+
+  const napoleonStrength = strengthOf(napoleonPlay.card, plays, trumpSuit, leadJokerSuit);
+  const best = strengthOf(currentWinningCard(plays, trumpSuit, leadJokerSuit), plays, trumpSuit, leadJokerSuit);
+  if (compareStrength(napoleonStrength, best) !== 0) {
+    return false; // 今の時点でナポレオンが負けている
+  }
+
+  const leadSuit = leadSuitFor(napoleonPlay.card, plays, trumpSuit, leadJokerSuit);
+  const leadIsTrump = leadSuit === trumpSuit;
+
+  // (a) 台札が切り札以外で、ナポレオンが切り札（または役札）を出している
+  if (!leadIsTrump && napoleonStrength.tier <= TRUMP_TIER) {
+    return true;
+  }
+
+  // (b) ナポレオンのカードより強いカードが残っていない
+  const known = knownCardsOf(view);
+  const isKnown = (card: Card) => known.some((k) => sameCard(k, card));
+  const strongerCardRemains = ALL_CARDS.some(
+    (card) =>
+      !isKnown(card) &&
+      (leadIsTrump || (card.type === "normal" && card.suit === leadSuit)) &&
+      compareStrength(strengthOf(card, plays, trumpSuit, leadJokerSuit), napoleonStrength) < 0,
+  );
+  return !strongerCardRemains;
+}
+
+// 出せるカードの中に、今トリックで一番強いカードに勝てるものがあるか。自分が親のときは true（まだ誰も出していない）
+function canBeatCurrentBest(sorted: Card[], plays: TrickPlay[], trumpSuit: Suit, leadJokerSuit: Suit | undefined): boolean {
+  if (plays.length === 0) {
+    return true;
+  }
+  const currentBest = strengthOf(currentWinningCard(plays, trumpSuit, leadJokerSuit), plays, trumpSuit, leadJokerSuit);
+  return compareStrength(strengthOf(sorted[0], plays, trumpSuit, leadJokerSuit), currentBest) < 0;
+}
+
+// 一番弱いカードを返す。ただし絵札以外のカードがあれば、その中から選ぶ（相手に絵札を渡さないため）
+function weakestAvoidingFaceCard(sorted: Card[]): Card {
+  const nonFaceCards = sorted.filter((c) => !isFaceCard(c));
+  const pool = nonFaceCards.length > 0 ? nonFaceCards : sorted;
+  return pool[pool.length - 1];
+}
+
+// 副官指定カードを除いた候補を返す。除くと出せるカードが無くなる場合は、そのまま返す
+function withoutFukukanCard(cards: Card[], fukukanCard: Card | null): Card[] {
+  if (fukukanCard === null) {
+    return cards;
+  }
+  const others = cards.filter((c) => !sameCard(c, fukukanCard));
+  return others.length > 0 ? others : cards;
+}
+
+// 今のトリックの台札のスートが、これまでのトリックでも台札になったことがあるか（=そのスートで回るのが2回目以降か）
+function isLeadSuitSeenBefore(
+  view: PlayerView,
+  plays: TrickPlay[],
+  trumpSuit: Suit,
+  leadJokerSuit: Suit | undefined,
+): boolean {
+  if (plays.length === 0) {
+    return false;
+  }
+  const currentLeadSuit = leadSuitFor(plays[0].card, plays, trumpSuit, leadJokerSuit);
+  return view.trickHistory.some(
+    (trick) =>
+      trick.plays.length > 0 &&
+      leadSuitFor(trick.plays[0].card, trick.plays, trumpSuit, trick.leadJokerSuit) === currentLeadSuit,
+  );
+}
+
+// そのCPUから見て、居所が分かっているカード（自分の手札・これまでに出たカード・公開された捨て札）
+function knownCardsOf(view: PlayerView): Card[] {
+  return [
+    ...view.myHand,
+    ...view.trickHistory.flatMap((trick) => trick.plays.map((play) => play.card)),
+    ...(view.currentTrick?.plays.map((play) => play.card) ?? []),
+    ...view.discardedCards,
+  ];
+}
+
+function sameCard(a: Card, b: Card): boolean {
+  if (a.type === "normal" && b.type === "normal") {
+    return a.suit === b.suit && a.rank === b.rank;
+  }
+  return a.type === b.type;
+}
+
+// 53枚すべてのカード
+const ALL_RANKS: Rank[] = [2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K", "A"];
+const ALL_CARDS: Card[] = [
+  ...SUIT_STRENGTH_ORDER.flatMap((suit) => ALL_RANKS.map((rank): Card => ({ type: "normal", suit, rank }))),
+  { type: "joker" },
+];
 
 // --- ここから下は、強さを比べるための小さな道具 ---
 

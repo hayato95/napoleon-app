@@ -217,3 +217,189 @@ describe("FR-32: その他", () => {
     expect(() => choose(1, [c("heart", 2)], [], NO_MISTAKE, { phase: "cardExchange" })).toThrow();
   });
 });
+
+// --- ここから下は FR-34（副官CPU）と、連合軍CPUが親のときの動き ---
+
+// 過去のトリックを1つ作る（最初のカードが台札）
+const pastTrick = (...cards: Card[]) => ({
+  leaderId: 0 as PlayerId,
+  winnerId: 0 as PlayerId,
+  plays: cards.map((card, i) => play(i as PlayerId, card)),
+});
+
+// 台札が♣の、中身に意味のない過去のトリックを n 個作る（「今が何トリック目か」を進めるため）
+const dummyTricks = (n: number) =>
+  [2, 3, 4, 5, 6, 7, 8, 9].slice(0, n).map((rank) => pastTrick(c("club", rank as Rank)));
+
+describe("連合軍CPUが親のとき（副官をあぶり出す）", () => {
+  // createState では副官指定カード = ♥A
+
+  it("副官指定カードと同じスートの、一番弱いカードを出す", () => {
+    const hand = [c("club", 2), c("heart", 7), c("heart", "K")];
+    expect(choose(1, hand, [], NO_MISTAKE).card).toEqual(c("heart", 7));
+  });
+
+  it("そのスートを持っていなければ、手札で一番弱いカードを出す", () => {
+    const hand = [c("club", 2), c("diamond", 7)];
+    expect(choose(1, hand, [], NO_MISTAKE).card).toEqual(c("club", 2));
+  });
+
+  it("副官指定カードがジョーカーなら、手札で一番弱いカードを出す", () => {
+    const hand = [c("club", 2), c("heart", 7)];
+    expect(choose(1, hand, [], NO_MISTAKE, { fukukanCard: JOKER }).card).toEqual(c("club", 2));
+  });
+
+  it("副官がもう公開されていれば、あぶり出さずに一番弱いカードを出す", () => {
+    const hand = [c("club", 2), c("heart", 7)];
+    expect(choose(1, hand, [], NO_MISTAKE, { fukukanRevealed: true }).card).toEqual(c("club", 2));
+  });
+
+  it("副官CPUも同じ動きをするが、副官指定カードそのものは出さない", () => {
+    // ♥が他にあれば、連合軍と同じく♥の一番弱いカード
+    expect(choose(3, [c("heart", "A"), c("heart", 6), c("club", 2)], [], NO_MISTAKE).card).toEqual(c("heart", 6));
+    // ♥が副官指定カード(♥A)だけなら、それは出さずに一番弱いカード
+    expect(choose(3, [c("heart", "A"), c("club", 5)], [], NO_MISTAKE).card).toEqual(c("club", 5));
+  });
+});
+
+describe("FR-34: 副官CPUがナポレオンに絵札を渡す（正体を隠している間）", () => {
+  // ナポレオン=0番、副官=3番、切り札=♠。♥が台札になるのは2回目、という状況を作る
+  const heartLedBefore = { trickHistory: [pastTrick(c("heart", 2))] };
+  // 4番が♥5でリードし、ナポレオンが切り札♠3で切っている
+  const napoleonRuffs = [play(4, c("heart", 5)), play(0, c("spade", 3))];
+
+  it("ナポレオンが切り札で切っていて、そのスートが2回目以降なら、一番弱い絵札を渡す", () => {
+    const hand = [c("heart", "K"), c("heart", 10), c("heart", 3)];
+    expect(choose(3, hand, napoleonRuffs, NO_MISTAKE, heartLedBefore).card).toEqual(c("heart", 10));
+  });
+
+  it("そのスートが台札になるのが1回目なら、渡さない（連合軍と同じ動き）", () => {
+    const hand = [c("heart", "K"), c("heart", 10), c("heart", 3)];
+    expect(choose(3, hand, napoleonRuffs, NO_MISTAKE).card).toEqual(c("heart", 3));
+  });
+
+  it("ナポレオンのカードより強いカードが残っていなければ、渡す", () => {
+    // ♥Aは過去のトリックで出ている。ナポレオンの♥Kより強い♥は残っていない
+    const state = { trickHistory: [pastTrick(c("heart", 2), c("heart", "A"))], fukukanCard: c("club", "A") };
+    const hand = [c("heart", "Q"), c("heart", 10), c("heart", 4)];
+    expect(choose(3, hand, [play(0, c("heart", "K"))], NO_MISTAKE, state).card).toEqual(c("heart", 10));
+  });
+
+  it("ナポレオンのカードより強いカードがまだ残っていれば、渡さない", () => {
+    // ♥Aの居所が分からない → ナポレオンの♥Kは負けるかもしれない
+    const state = { ...heartLedBefore, fukukanCard: c("club", "A") };
+    const hand = [c("heart", "Q"), c("heart", 10), c("heart", 4)];
+    expect(choose(3, hand, [play(0, c("heart", "K"))], NO_MISTAKE, state).card).toEqual(c("heart", 4));
+  });
+
+  it("ナポレオンが今負けていれば、渡さない", () => {
+    // ナポレオンの♥9は、4番の♥Jに負けている
+    const plays = [play(4, c("heart", "J")), play(0, c("heart", 9))];
+    const hand = [c("heart", 10), c("heart", 3)];
+    expect(choose(3, hand, plays, NO_MISTAKE, heartLedBefore).card).toEqual(c("heart", 3));
+  });
+
+  it("オールマイティ・正ジャック・裏ジャックは渡さない", () => {
+    // ♥が無いので何でも出せる。絵札は正ジャック(♠J)と♣10 → ♣10を渡す
+    const hand = [c("spade", "J"), c("club", 10), c("diamond", 3)];
+    expect(choose(3, hand, napoleonRuffs, NO_MISTAKE, heartLedBefore).card).toEqual(c("club", 10));
+  });
+
+  it("副官ではない連合軍CPUは、同じ状況でも絵札を渡さない", () => {
+    const hand = [c("heart", "K"), c("heart", 10), c("heart", 3)];
+    expect(choose(1, hand, napoleonRuffs, NO_MISTAKE, heartLedBefore).card).toEqual(c("heart", 3));
+  });
+});
+
+describe("FR-34: 副官CPUが正体を隠すのをやめる（公開後・7トリック目以降）", () => {
+  const hand = [c("heart", "A"), c("heart", 2)];
+  const plays = [play(4, c("heart", 9))]; // 絵札なし。連合軍ロジックなら♥2を出す場面
+
+  it("正体が公開された後は、一番強いカードを出す", () => {
+    expect(choose(3, hand, plays, NO_MISTAKE, { fukukanRevealed: true }).card).toEqual(c("heart", "A"));
+  });
+
+  it("公開されていなくても、7トリック目からは一番強いカードを出す", () => {
+    expect(choose(3, hand, plays, NO_MISTAKE, { trickHistory: dummyTricks(6) }).card).toEqual(c("heart", "A"));
+  });
+
+  it("6トリック目までは、連合軍と同じ動きをする", () => {
+    expect(choose(3, hand, plays, NO_MISTAKE, { trickHistory: dummyTricks(5) }).card).toEqual(c("heart", 2));
+  });
+
+  it("公開後は、そのスートが1回目でも、ナポレオンが勝てそうなら絵札を渡す", () => {
+    const napoleonRuffs = [play(4, c("heart", 5)), play(0, c("spade", 3))];
+    const h = [c("heart", "K"), c("heart", 10), c("heart", 3)];
+    expect(choose(3, h, napoleonRuffs, NO_MISTAKE, { fukukanRevealed: true }).card).toEqual(c("heart", 10));
+  });
+
+  it("公開後、ナポレオンが勝てそうで渡す絵札が無ければ、一番弱いカードを出す（強いカードを無駄にしない）", () => {
+    const napoleonRuffs = [play(4, c("heart", 5)), play(0, c("spade", 3))];
+    const h = [c("heart", 9), c("heart", 3)];
+    expect(choose(3, h, napoleonRuffs, NO_MISTAKE, { fukukanRevealed: true }).card).toEqual(c("heart", 3));
+  });
+
+  it("公開後に親になったら、一番強いカードを出す", () => {
+    const h = [c("spade", "K"), c("heart", 4), c("diamond", 8)];
+    expect(choose(3, h, [], NO_MISTAKE, { fukukanRevealed: true }).card).toEqual(c("spade", "K"));
+  });
+
+  it("副官ではない連合軍CPUは、7トリック目以降も連合軍の動きのまま", () => {
+    expect(choose(1, hand, plays, NO_MISTAKE, { trickHistory: dummyTricks(6) }).card).toEqual(c("heart", 2));
+  });
+});
+
+describe("FR-34: 正体を隠している間は、副官指定カードを出さない", () => {
+  // 副官=3番、副官指定カード=♥A。4番が♥K（絵札）でリードしていて、♥Aを出せば勝てる場面
+  const plays = [play(4, c("heart", "K"))];
+
+  it("他に出せるカードがあれば、勝てる場面でも副官指定カードは出さない", () => {
+    const hand = [c("heart", "A"), c("heart", 3)];
+    expect(choose(3, hand, plays, NO_MISTAKE).card).toEqual(c("heart", 3));
+  });
+
+  it("判断を誤る15%に当たっても、副官指定カードは出さない", () => {
+    const hand = [c("heart", "A"), c("heart", 7), c("heart", 3)];
+    expect(choose(3, hand, plays, MISTAKE).card).not.toEqual(c("heart", "A"));
+  });
+
+  it("マストフォローで副官指定カードしか出せないときは、出す", () => {
+    const hand = [c("heart", "A"), c("club", 5)];
+    expect(choose(3, hand, plays, NO_MISTAKE).card).toEqual(c("heart", "A"));
+  });
+
+  it("7トリック目以降は、副官指定カードも普通に出す", () => {
+    const hand = [c("heart", "A"), c("heart", 3)];
+    expect(choose(3, hand, plays, NO_MISTAKE, { trickHistory: dummyTricks(6) }).card).toEqual(c("heart", "A"));
+  });
+});
+
+describe("FR-71: 副官CPUの終盤の立ち回り", () => {
+  it("9トリック目で、ナポレオンが勝てそうな手を出していれば、温存していた絵札を乗せる", () => {
+    // 正体は未公開。4番が♥5でリードし、ナポレオンが切り札♠3で切っている
+    const plays = [play(4, c("heart", 5)), play(0, c("spade", 3))];
+    const hand = [c("heart", "K"), c("heart", 3)];
+    expect(choose(3, hand, plays, NO_MISTAKE, { trickHistory: dummyTricks(8) }).card).toEqual(c("heart", "K"));
+  });
+
+  it("ナポレオンが不利で自分も勝てないトリックには、絵札を出さない", () => {
+    // 4番の♥Aが勝っていて、ナポレオンの♥9は負けている。自分の♥Kでも勝てない → 絵札ではない♥3
+    const plays = [play(4, c("heart", "A")), play(0, c("heart", 9))];
+    const hand = [c("heart", "K"), c("heart", 10), c("heart", 3)];
+    expect(choose(3, hand, plays, NO_MISTAKE, { fukukanRevealed: true }).card).toEqual(c("heart", 3));
+  });
+
+  it("ナポレオンが不利でも、自分が勝てるなら一番強いカードで勝ちにいく", () => {
+    const plays = [play(4, c("heart", "Q")), play(0, c("heart", 9))];
+    const hand = [c("heart", "K"), c("heart", 3)];
+    expect(choose(3, hand, plays, NO_MISTAKE, { fukukanRevealed: true, fukukanCard: c("club", "A") }).card).toEqual(
+      c("heart", "K"),
+    );
+  });
+
+  it("勝てないトリックで手札が絵札だけなら、その中で一番弱いカードを出す", () => {
+    const plays = [play(4, c("heart", "A")), play(0, c("heart", 9))];
+    const hand = [c("heart", "K"), c("heart", 10)];
+    expect(choose(3, hand, plays, NO_MISTAKE, { fukukanRevealed: true }).card).toEqual(c("heart", 10));
+  });
+});
