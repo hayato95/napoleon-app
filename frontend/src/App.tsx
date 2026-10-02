@@ -2,22 +2,14 @@ import { useEffect, useState } from 'react'
 import { io } from 'socket.io-client'
 import './App.css'
 import { FukukanNominationScreen } from './components/FukukanNominationScreen'
-import type { Card } from './types'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001'
 
 function App() {
   const [status, setStatus] = useState('backendに接続中...')
-  const [hand, setHand] = useState<Card[]>([])
-  const [socket, setSocket] = useState<ReturnType<typeof io> | null>(null)
-
-  const discardCards = (cardIndexes: number[]) => {
-    socket?.emit('discardCards', { cardIndexes })
-  }
 
   useEffect(() => {
     const newSocket = io(BACKEND_URL)
-    setSocket(newSocket)
 
     newSocket.on('connect', () => {
       setStatus('接続済み。イベント待機中...')
@@ -26,20 +18,6 @@ function App() {
     newSocket.on('hello', (data: { message: string }) => {
       setStatus(data.message)
     })
-
-    newSocket.on(
-      'yourHand',
-      (data: { playerId: number; hand: Card[] }) => {
-        setHand(data.hand)
-      },
-    )
-
-    newSocket.on(
-      'handAfterDiscard',
-      (data: { playerId: number; hand: Card[] }) => {
-        setHand(data.hand)
-      },
-    )
 
     newSocket.on('connect_error', () => {
       setStatus('backendへの接続に失敗しました')
@@ -56,13 +34,13 @@ function App() {
       <p>{status}</p>
 
       <div>
-        <h2>あなたの手札</h2>
+    
 
         <FukukanNominationScreen
-  onSelect={(card) => {
-    console.log('副官指定カード:', card)
-  }}
-/>
+          onSelect={(card) => {
+            console.log('副官指定カード:', card)
+          }}
+        />
       </div>
     </main>
   )

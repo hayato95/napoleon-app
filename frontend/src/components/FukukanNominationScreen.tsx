@@ -1,29 +1,23 @@
 import { useState } from 'react'
-import type { Card, Suit } from '../types'
+import type { Card, Rank, Suit } from '../types'
 import { PlayingCard } from './PlayingCard'
 
 const SUITS: Suit[] = ['spade', 'diamond', 'heart', 'club']
 
-const RANKS: Card[] = [
+const RANKS: Rank[] = [
   2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K', 'A',
-].map((rank) => ({
-  type: 'normal',
-  suit: 'spade',
-  rank,
-}))
+]
 
 function createDeck(): Card[] {
   const cards: Card[] = []
 
   for (const suit of SUITS) {
-    for (const card of RANKS) {
-      if (card.type === 'normal') {
-        cards.push({
-          type: 'normal',
-          suit,
-          rank: card.rank,
-        })
-      }
+    for (const rank of RANKS) {
+      cards.push({
+        type: 'normal',
+        suit,
+        rank,
+      })
     }
   }
 
@@ -85,7 +79,7 @@ export function FukukanNominationScreen({
         {SUITS.map((suit) => (
           <div className="fukukan-card-row" key={suit}>
             {DECK.filter(
-              (card) =>
+              (card): card is Extract<Card, { type: 'normal' }> =>
                 card.type === 'normal' && card.suit === suit,
             ).map((card) => (
               <PlayingCard
@@ -99,14 +93,14 @@ export function FukukanNominationScreen({
           </div>
         ))}
 
-        <div className="fukukan-card-row fukukan-joker-row">
-          <PlayingCard
-            card={{ type: 'joker' }}
-            playable={true}
-            selected={selectedCard?.type === 'joker'}
-            onClick={() => setSelectedCard({ type: 'joker' })}
-          />
-        </div>
+       <div className="fukukan-card-row fukukan-joker-row">
+  <PlayingCard
+    card={{ type: 'joker' }}
+    playable={true}
+    selected={false}
+    onClick={() => setSelectedCard({ type: 'joker' })}
+  />
+</div>
       </div>
     </div>
   )
