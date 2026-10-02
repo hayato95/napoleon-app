@@ -1,15 +1,18 @@
 import { useState } from 'react'
+import type { StateUpdate } from '../protocol'
 import { Hand } from './Hand'
-import type { Card } from '../types'
+import { TableLayout } from './TableLayout'
 
 const DISCARD_COUNT = 3
 
 interface CardExchangeScreenProps {
-  hand: Card[]
+  update: StateUpdate
   onDiscard: (indexes: number[]) => void
 }
 
-export function CardExchangeScreen({ hand, onDiscard }: CardExchangeScreenProps) {
+// カード交換（FR-38）。捨てる3枚は下の手札から選び、説明とボタンはテーブル中央に出す（FR-73）
+export function CardExchangeScreen({ update, onDiscard }: CardExchangeScreenProps) {
+  const { view, actorId } = update
   const [selectedIndexes, setSelectedIndexes] = useState<number[]>([])
 
   const toggleCardSelection = (index: number) => {
@@ -35,17 +38,32 @@ export function CardExchangeScreen({ hand, onDiscard }: CardExchangeScreenProps)
   }
 
   return (
-    <div className="card-exchange-screen">
-      <Hand
-        hand={hand}
-        isPlayable={() => true}
-        selectedIndexes={selectedIndexes}
-        onCardClick={toggleCardSelection}
-      />
-
-      <button onClick={handleDiscard} disabled={selectedIndexes.length !== DISCARD_COUNT}>
-        選択した3枚を捨てる
-      </button>
-    </div>
+    <TableLayout
+      view={view}
+      actorId={actorId}
+      center={
+        <div className="card-exchange-screen">
+          <h2>カード交換</h2>
+          <p>場の3枚を受け取りました。いらない3枚を手札から選んでください。</p>
+          <button
+            type="button"
+            className="primary-button"
+            onClick={handleDiscard}
+            disabled={selectedIndexes.length !== DISCARD_COUNT}
+          >
+            選択した3枚を捨てる（{selectedIndexes.length}/{DISCARD_COUNT}）
+          </button>
+        </div>
+      }
+      handHint="捨てるカードをタップしてください"
+      hand={
+        <Hand
+          hand={view.myHand}
+          isPlayable={() => true}
+          selectedIndexes={selectedIndexes}
+          onCardClick={toggleCardSelection}
+        />
+      }
+    />
   )
 }

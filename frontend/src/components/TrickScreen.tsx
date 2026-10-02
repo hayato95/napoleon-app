@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { cardLabel, cardsEqual, SUIT_SYMBOL, trickCardRoleLabel } from '../card-utils'
+import { playerName } from '../player-utils'
 import type { PlayerView, StateUpdate } from '../protocol'
+import { seatOf, seatPositions } from '../seat-layout'
 import type { Card, Suit, Trick } from '../types'
-import { CapturedCards } from './CapturedCards'
 import { Hand } from './Hand'
 import { PlayingCard } from './PlayingCard'
-import { playerName } from '../player-utils'
-import { TableInfo } from './TableInfo'
+import { TableLayout } from './TableLayout'
 
 const SUITS: Suit[] = ['spade', 'diamond', 'heart', 'club']
 const TOTAL_TRICKS = 10
@@ -52,54 +52,63 @@ export function TrickScreen({ update, onPlay }: TrickScreenProps) {
     setPendingJoker(null)
   }
 
-  return (
-    <div className="trick-screen">
-      <TableInfo view={view} />
+  const leadSuit = shownTrick === null || isResultShown ? null : leadSuitOf(shownTrick)
 
-      <ul className="seat-list" aria-label="プレイヤー">
-        {view.players.map((player) => (
-          <li key={player.id} data-active={player.id === actorId}>
-            <strong>{player.name}</strong>
-            {player.id === view.napoleonId && <span className="role">ナポレオン</span>}
-            {view.fukukanRevealed && player.id === view.fukukanId && <span className="role">副官</span>}
-            <span>手札 {player.handCount}枚</span>
-            <span>絵札 {view.capturedCards[player.id].length}枚</span>
-            <CapturedCards playerId={player.id} cards={view.capturedCards[player.id]} />
-          </li>
-        ))}
-      </ul>
+  const center = (
+    <div className="trick-table">
+      {shownTrick !== null && <TrickCards trick={shownTrick} view={view} highlightLatest={!isResultShown} />}
 
-      <section className="trick-table" aria-label="場">
-        <h2>
+      <div className="trick-info">
+        <strong>
           {isResultShown && lastTrick !== undefined
             ? `トリック ${trickNumber} の結果（勝者: ${lastTrick.winnerId === undefined ? '-' : playerName(view, lastTrick.winnerId)}）`
-            : `トリック ${trickNumber}/${TOTAL_TRICKS}`}
-        </h2>
+            : `トリック ${trickNumber} / ${TOTAL_TRICKS}`}
+        </strong>
+        {leadSuit !== null && shownTrick !== null && (
+          <span>
+            台札 {SUIT_SYMBOL[leadSuit]}（{playerName(view, shownTrick.leaderId)} のリード）
+          </span>
+        )}
+        {currentTrick === null && !myTurn && <span>次のリードを待っています</span>}
 
-        {shownTrick !== null && <TrickCards trick={shownTrick} view={view} highlightLatest={!isResultShown} />}
-
-        {currentTrick === null && <p>{myTurn ? 'あなたがリードします。出すカードを選んでください。' : 'CPUの手番です。'}</p>}
-      </section>
-
-      {pendingJoker !== null && (
-        <div className="joker-suit-picker" role="group" aria-label="ジョーカーの台札のスート">
-          <p>ジョーカーでリードします。台札のスートを選んでください。</p>
-          {SUITS.map((suit) => (
-            <button key={suit} type="button" onClick={() => playJoker(suit)}>
-              {SUIT_SYMBOL[suit]}
+        {pendingJoker !== null && (
+          <div className="joker-suit-picker" role="group" aria-label="ジョーカーの台札のスート">
+            <p>ジョーカーでリードします。台札のスートを選んでください。</p>
+            {SUITS.map((suit) => (
+              <button key={suit} type="button" onClick={() => playJoker(suit)}>
+                {SUIT_SYMBOL[suit]}
+              </button>
+            ))}
+            <button type="button" onClick={() => setPendingJoker(null)}>
+              やめる
             </button>
-          ))}
-          <button type="button" onClick={() => setPendingJoker(null)}>
-            やめる
-          </button>
-        </div>
-      )}
-
-      {myTurn && currentTrick !== null && <p className="turn-hint">あなたの番です。出せるカードを選んでください。</p>}
-
-      <Hand hand={view.myHand} isPlayable={isPlayable} onCardClick={handleCardClick} />
+          </div>
+        )}
+      </div>
     </div>
   )
+
+  const handHint = !myTurn
+    ? undefined
+    : currentTrick === null
+      ? 'あなたがリードします。出すカードを選んでください'
+      : '光っているカードを出せます'
+
+  return (
+    <TableLayout
+      view={view}
+      actorId={actorId}
+      center={center}
+      handHint={handHint}
+      hand={<Hand hand={view.myHand} isPlayable={isPlayable} onCardClick={handleCardClick} />}
+    />
+  )
+}
+
+// 台札のスート。ジョーカーでリードしたときは、リードした人が決めたスート
+function leadSuitOf(trick: Trick): Suit | null {
+  const firstCard = trick.plays[0]?.card
+  return trick.leadJokerSuit ?? (firstCard?.type === 'normal' ? firstCard.suit : null)
 }
 
 interface TrickCardsProps {
@@ -108,11 +117,11 @@ interface TrickCardsProps {
   highlightLatest?: boolean // 進行中のトリックで、直前に出たカードを目立たせる
 }
 
+// 場に出たカード。出した人の座席の方向に置く（自分は手前、CPU は左・上・右）
 function TrickCards({ trick, view, highlightLatest = false }: TrickCardsProps) {
+  const seats = seatPositions(view.turnOrder, view.viewerId)
   const latestPlayerId = highlightLatest ? trick.plays[trick.plays.length - 1]?.playerId : undefined
-  // 台札のスート。ジョーカーでリードしたときは、リードした人が決めたスート
-  const firstCard = trick.plays[0]?.card
-  const leadSuit = trick.leadJokerSuit ?? (firstCard?.type === 'normal' ? firstCard.suit : null)
+  const leadSuit = leadSuitOf(trick)
   const hasWinner = trick.winnerId !== undefined
 
   return (
@@ -123,6 +132,7 @@ function TrickCards({ trick, view, highlightLatest = false }: TrickCardsProps) {
         return (
           <li
             key={play.playerId}
+            data-seat={seatOf(seats, play.playerId)}
             data-winner={play.playerId === trick.winnerId}
             data-loser={hasWinner && play.playerId !== trick.winnerId}
             data-latest={play.playerId === latestPlayerId}
