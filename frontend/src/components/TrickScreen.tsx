@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { cardLabel, cardsEqual, SUIT_SYMBOL } from '../card-utils'
+import { cardLabel, cardsEqual, SUIT_SYMBOL, trickCardRoleLabel } from '../card-utils'
 import type { PlayerView, StateUpdate } from '../protocol'
 import type { Card, Suit, Trick } from '../types'
 import { CapturedCards } from './CapturedCards'
@@ -110,17 +110,31 @@ interface TrickCardsProps {
 
 function TrickCards({ trick, view, highlightLatest = false }: TrickCardsProps) {
   const latestPlayerId = highlightLatest ? trick.plays[trick.plays.length - 1]?.playerId : undefined
+  // 台札のスート。ジョーカーでリードしたときは、リードした人が決めたスート
+  const firstCard = trick.plays[0]?.card
+  const leadSuit = trick.leadJokerSuit ?? (firstCard?.type === 'normal' ? firstCard.suit : null)
+  const hasWinner = trick.winnerId !== undefined
 
   return (
     <ul className="trick-cards">
-      {trick.plays.map((play) => (
-        <li key={play.playerId} data-winner={play.playerId === trick.winnerId} data-latest={play.playerId === latestPlayerId}>
-          <span className="trick-player-name">{playerName(view, play.playerId)}</span>
-          <PlayingCard card={play.card} playable={true} />
-          <span className="visually-hidden">{cardLabel(play.card)}</span>
-          {play.playerId === latestPlayerId && <span className="latest-badge">いま出した</span>}
-        </li>
-      ))}
+      {trick.plays.map((play) => {
+        const roleLabel = view.trumpSuit === null ? null : trickCardRoleLabel(play.card, view.trumpSuit, leadSuit)
+
+        return (
+          <li
+            key={play.playerId}
+            data-winner={play.playerId === trick.winnerId}
+            data-loser={hasWinner && play.playerId !== trick.winnerId}
+            data-latest={play.playerId === latestPlayerId}
+          >
+            <span className="trick-player-name">{playerName(view, play.playerId)}</span>
+            <PlayingCard card={play.card} playable={true} />
+            <span className="visually-hidden">{cardLabel(play.card)}</span>
+            {roleLabel !== null && <span className="trick-card-role">{roleLabel}</span>}
+            {play.playerId === latestPlayerId && <span className="latest-badge">いま出した</span>}
+          </li>
+        )
+      })}
     </ul>
   )
 }
