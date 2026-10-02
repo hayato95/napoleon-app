@@ -1,7 +1,7 @@
 import type { PlayerAction, StateUpdate } from '../protocol'
 import { CardExchangeScreen } from './CardExchangeScreen'
-import { DeclarationHistory } from './DeclarationHistory'
 import { DeclarationScreen } from './DeclarationScreen'
+import { DeclarationSeats } from './DeclarationSeats'
 import { FukukanNominationScreen } from './FukukanNominationScreen'
 import { Hand } from './Hand'
 import { ResultScreen } from './ResultScreen'
@@ -24,8 +24,8 @@ export function GameScreen({ update, send }: GameScreenProps) {
       return (
         <div>
           <h2>宣言（せり）</h2>
+          <DeclarationSeats view={view} actorId={actorId} />
           <Hand hand={view.myHand} isPlayable={() => true} />
-          <DeclarationHistory view={view} />
           {myTurn ? (
             <DeclarationScreen
               onDeclare={(suit, count) => send({ type: 'declare', suit, count })}
