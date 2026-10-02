@@ -253,3 +253,70 @@
     border-right-color: var(--border);
   }
 }
+
+
+.fukukan-nomination-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+}
+
+.fukukan-card-list {
+  width: min(100%, 900px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  overflow-x: auto;
+}
+
+.fukukan-card-row {
+  display: flex;
+  justify-content: center;
+  padding-left: 40px;
+}
+
+.fukukan-card-row .playing-card {
+  margin-left: -48px;
+  position: relative;
+}
+
+.fukukan-card-row .playing-card:first-child {
+  margin-left: 0;
+}
+
+.fukukan-card-row .playing-card:hover {
+  z-index: 10;
+  transform: translateY(-12px);
+}
+
+.fukukan-card-row .playing-card img {
+  width: 72px;
+}
+
+.fukukan-joker-row {
+  margin-top: 4px;
+}
+
+.fukukan-selected-card {
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+}
+
+.fukukan-selected-card .playing-card img {
+  width: 180px;
+}
+
+.fukukan-confirm-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.fukukan-confirm-actions button {
+  padding: 10px 20px;
+  cursor: pointer;
+}

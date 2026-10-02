@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { io } from 'socket.io-client'
 import './App.css'
-import { CardExchangeScreen } from './components/CardExchangeScreen'
+import { FukukanNominationScreen } from './components/FukukanNominationScreen'
 import type { Card } from './types'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001'
@@ -58,7 +58,11 @@ function App() {
       <div>
         <h2>あなたの手札</h2>
 
-        <CardExchangeScreen hand={hand} onDiscard={discardCards} />
+        <FukukanNominationScreen
+  onSelect={(card) => {
+    console.log('副官指定カード:', card)
+  }}
+/>
       </div>
     </main>
   )
