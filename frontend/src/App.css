@@ -321,12 +321,125 @@
   cursor: pointer;
 }
 
-
 /* ========================================
-   FR-39 トリック表示
+   main側の既存トリック画面
    ======================================== */
 
-.trick-display {
+.action-error {
+  color: #b42318;
+  font-weight: bold;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.table-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  justify-content: center;
+  margin: 0 0 16px;
+
+  & > div {
+    display: flex;
+    gap: 6px;
+  }
+
+  dt {
+    font-weight: bold;
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+.trick-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.seat-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 12px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+  }
+
+  li[data-active='true'] {
+    border-color: var(--accent);
+  }
+
+  .role {
+    color: var(--accent);
+    font-weight: bold;
+  }
+}
+
+.trick-table {
+  width: 100%;
+
+  h2,
+  h3 {
+    margin: 8px 0;
+  }
+}
+
+/* ========================================
+   既存トリック表示
+   ======================================== */
+
+.trick-screen .trick-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+  }
+
+  li[data-winner='true'] .playing-card {
+    border-color: var(--accent);
+  }
+
+  .playing-card {
+    cursor: default;
+  }
+}
+
+/* ========================================
+   FR-39 トリック進行表示
+   ======================================== */
+
+.fr39-trick-display {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -334,11 +447,11 @@
   padding: 24px 16px;
 }
 
-.trick-display h2 {
+.fr39-trick-display h2 {
   margin: 0;
 }
 
-.trick-cards {
+.fr39-trick-cards {
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -346,7 +459,7 @@
   min-height: 190px;
 }
 
-.trick-card {
+.fr39-trick-card {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -357,42 +470,35 @@
     opacity 0.35s ease,
     filter 0.35s ease;
 
-  /*
-   * カードを出した瞬間のアニメーション。
-   */
   animation: trick-card-play 0.7s ease-out;
 }
 
-.trick-player {
+.fr39-trick-player {
   font-weight: bold;
   white-space: nowrap;
 }
 
-.trick-card-image {
+.fr39-trick-card-image {
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.trick-card-image .playing-card {
+.fr39-trick-card-image .playing-card {
   cursor: default;
 }
 
-.trick-card-image .playing-card img {
+.fr39-trick-card-image .playing-card img {
   width: 100px;
 }
 
-.trick-card-label {
+.fr39-trick-card-label {
   min-height: 24px;
   font-size: 16px;
   font-weight: bold;
   white-space: nowrap;
 }
 
-/*
- * カードを出した瞬間、
- * 少し大きくなってから元の大きさに戻る。
- */
 @keyframes trick-card-play {
   0% {
     transform: scale(1);
@@ -407,47 +513,31 @@
   }
 }
 
-/*
- * ========================================
- * 勝者演出
- * ========================================
- *
- * 5枚目が出てから1秒後に開始。
- */
+/* ========================================
+   FR-39 勝者演出
+   ======================================== */
 
-/*
- * 勝者以外の4枚をぼかして少し小さくする。
- */
-.trick-cards[data-winner-animation='true']
-  .trick-card[data-loser='true'] {
+.fr39-trick-cards[data-winner-animation='true']
+  .fr39-trick-card[data-loser='true'] {
   filter: blur(4px);
   opacity: 0.45;
   transform: scale(0.9);
 }
 
-/*
- * 勝者カードを大きく表示する。
- */
-.trick-cards[data-winner-animation='true']
-  .trick-card[data-winner='true'] {
+.fr39-trick-cards[data-winner-animation='true']
+  .fr39-trick-card[data-winner='true'] {
   position: relative;
   z-index: 10;
   transform: scale(1.5);
 }
 
-/*
- * 勝者カードの名前も少し大きくする。
- */
-.trick-cards[data-winner-animation='true']
-  .trick-card[data-winner='true']
-  .trick-card-label {
+.fr39-trick-cards[data-winner-animation='true']
+  .fr39-trick-card[data-winner='true']
+  .fr39-trick-card-label {
   font-size: 18px;
 }
 
-/*
- * 勝者情報
- */
-.trick-winner {
+.fr39-trick-winner {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -456,12 +546,12 @@
   animation: trick-winner-appear 0.35s ease-out;
 }
 
-.trick-winner-player {
+.fr39-trick-winner-player {
   font-size: 20px;
   font-weight: bold;
 }
 
-.trick-winner-reason {
+.fr39-trick-winner-reason {
   font-size: 24px;
   font-weight: bold;
 }
@@ -478,7 +568,9 @@
   }
 }
 
-
+/* ========================================
+   FR-39 フェーズ確認用
+   ======================================== */
 
 .phase-placeholder {
   display: flex;
@@ -494,4 +586,187 @@
 
 .phase-placeholder p {
   margin: 0;
+}
+
+/* ========================================
+   既存ゲーム画面
+   ======================================== */
+
+.joker-suit-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+
+  p {
+    width: 100%;
+    margin: 0;
+  }
+
+  button {
+    padding: 8px 16px;
+    cursor: pointer;
+  }
+}
+
+.turn-hint {
+  margin: 0;
+  font-weight: bold;
+}
+
+.start-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 32px 0;
+
+  button {
+    padding: 12px 32px;
+    font-size: 18px;
+    cursor: pointer;
+  }
+}
+
+.result-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+
+  h2,
+  p {
+    margin: 0;
+  }
+}
+
+.result-headline {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.result-armies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  justify-content: center;
+  width: 100%;
+  margin-top: 16px;
+}
+
+.army-breakdown {
+  flex: 1 1 320px;
+  max-width: 480px;
+  padding: 12px 16px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+
+  h3 {
+    margin: 0 0 8px;
+  }
+}
+
+.army-members {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  font-size: 14px;
+}
+
+.result-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+
+  .playing-card {
+    cursor: default;
+
+    img {
+      width: 48px;
+    }
+  }
+}
+
+.restart-button {
+  padding: 10px 28px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.trick-player-name {
+  font-weight: bold;
+}
+
+.trick-cards li[data-latest='true'] .playing-card {
+  box-shadow: 0 0 0 3px #f59e0b;
+}
+
+.latest-badge {
+  font-size: 12px;
+  font-weight: bold;
+  color: #b45309;
+}
+
+.captured-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  max-width: 170px;
+  min-height: 0;
+
+  img {
+    display: block;
+    width: 40px;
+    height: auto;
+    border-radius: 3px;
+  }
+}
+
+.declaration-seats {
+  margin-bottom: 8px;
+
+  li {
+    min-width: 96px;
+    align-items: center;
+  }
+
+  li[data-latest='true'] {
+    border-color: var(--accent);
+    background: var(--accent-bg);
+  }
+
+  li[data-next='true'] {
+    border-style: dashed;
+    border-color: var(--text);
+  }
+}
+
+.declaration-text {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--text-h);
+}
+
+.seat-tag {
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--accent);
+}
+
+.seat-tag-next {
+  color: var(--text);
+}
+
+.highest-declaration {
+  margin: 8px 0 16px;
+  text-align: center;
+  font-weight: bold;
 }

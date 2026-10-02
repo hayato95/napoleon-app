@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { io } from 'socket.io-client'
 import './App.css'
+import { CardExchangeScreen } from './components/CardExchangeScreen'
 import { FukukanNominationScreen } from './components/FukukanNominationScreen'
 import { TrickDisplay, type TrickPlay } from './components/TrickDisplay'
-import type { Suit } from './types'
+import type { Card, Suit } from './types'
 
 const BACKEND_URL =
   import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001'
@@ -62,6 +63,8 @@ const DEMO_TRICKS: {
 
 function App() {
   const [status, setStatus] = useState('backendに接続中...')
+  const [hand, setHand] = useState<Card[]>([])
+  const [socket, setSocket] = useState<ReturnType<typeof io> | null>(null)
 
   const [phaseIndex, setPhaseIndex] = useState(0)
   const [visibleCount, setVisibleCount] = useState(0)
@@ -70,16 +73,35 @@ function App() {
   const phase = DEMO_PHASES[phaseIndex]
   const currentTrick = DEMO_TRICKS[trickIndex]
 
+  const discardCards = (cardIndexes: number[]) => {
+    socket?.emit('discardCards', { cardIndexes })
+  }
+
   useEffect(() => {
     const newSocket = io(BACKEND_URL)
+    setSocket(newSocket)
 
     newSocket.on('connect', () => {
-      setStatus('接続済み。イベント待機中...')
+      setStatus('接続済み')
     })
 
     newSocket.on('hello', (data: { message: string }) => {
       setStatus(data.message)
     })
+
+    newSocket.on(
+      'yourHand',
+      (data: { playerId: number; hand: Card[] }) => {
+        setHand(data.hand)
+      },
+    )
+
+    newSocket.on(
+      'handAfterDiscard',
+      (data: { playerId: number; hand: Card[] }) => {
+        setHand(data.hand)
+      },
+    )
 
     newSocket.on('connect_error', () => {
       setStatus('backendへの接続に失敗しました')
@@ -139,7 +161,7 @@ function App() {
    *
    * 実際のゲームではGameStateを次の状態へ進める処理に置き換える。
    */
-  const startNextTrick = useCallback(() => {
+  const startNextTrick = () => {
     setVisibleCount(0)
 
     setTrickIndex((currentIndex) => {
@@ -149,16 +171,13 @@ function App() {
     setPhaseIndex((currentIndex) => {
       const trickPhaseIndex = DEMO_PHASES.indexOf('trick')
 
-      /*
-       * 今回のデモでは、トリック終了後に結果フェーズへ進む。
-       */
       if (currentIndex === trickPhaseIndex) {
         return DEMO_PHASES.indexOf('result')
       }
 
       return currentIndex
     })
-  }, [])
+  }
 
   const visiblePlays = currentTrick.plays.slice(0, visibleCount)
 
@@ -180,10 +199,14 @@ function App() {
       )}
 
       {phase === 'cardExchange' && (
-        <section className="phase-placeholder">
+        <div>
           <h2>カード交換</h2>
-          <p>カード交換フェーズです。</p>
-        </section>
+
+          <CardExchangeScreen
+            hand={hand}
+            onDiscard={discardCards}
+          />
+        </div>
       )}
 
       {phase === 'trick' && (

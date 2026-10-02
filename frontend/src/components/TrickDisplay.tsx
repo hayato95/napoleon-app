@@ -159,11 +159,11 @@ export function TrickDisplay({
   }, [plays, winnerPlayerId, onNextTrick])
 
   return (
-    <section className="trick-display">
+    <section className="fr39-trick-display">
       <h2>トリック</h2>
 
       <div
-        className="trick-cards"
+        className="fr39-trick-cards"
         data-winner-animation={winnerAnimation}
       >
         {plays.map((play, index) => {
@@ -186,15 +186,15 @@ export function TrickDisplay({
           return (
             <div
               key={`${play.playerId}-${index}`}
-              className="trick-card"
+              className="fr39-trick-card"
               data-winner={isWinner}
               data-loser={isLoser}
             >
-              <div className="trick-player">
+              <div className="fr39-trick-player">
                 Player {play.playerId}
               </div>
 
-              <div className="trick-card-image">
+              <div className="fr39-trick-card-image">
                 <PlayingCard
                   card={play.card}
                   playable={false}
@@ -202,7 +202,7 @@ export function TrickDisplay({
               </div>
 
               {cardLabel !== null && (
-                <div className="trick-card-label">
+                <div className="fr39-trick-card-label">
                   {cardLabel}
                 </div>
               )}
@@ -212,13 +212,13 @@ export function TrickDisplay({
       </div>
 
       {winnerAnimation && winnerPlayerId !== null && (
-        <div className="trick-winner">
-          <div className="trick-winner-player">
+        <div className="fr39-trick-winner">
+          <div className="fr39-trick-winner-player">
             勝者：Player {winnerPlayerId}
           </div>
 
           {winnerReason !== null && (
-            <div className="trick-winner-reason">
+            <div className="fr39-trick-winner-reason">
               {winnerReason}
             </div>
           )}
