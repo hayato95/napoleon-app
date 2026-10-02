@@ -6,10 +6,11 @@ import { TableInfo } from './TableInfo'
 
 interface ResultScreenProps {
   update: StateUpdate
+  onRestart: () => void
 }
 
 // 対局が終わったあとに、勝敗と、ナポレオン軍・連合軍それぞれの獲得絵札の内訳を見せる（FR-42）
-export function ResultScreen({ update }: ResultScreenProps) {
+export function ResultScreen({ update, onRestart }: ResultScreenProps) {
   const { view, result, resultSummary } = update
   if (result === null || resultSummary === null) {
     return null
@@ -27,6 +28,10 @@ export function ResultScreen({ update }: ResultScreenProps) {
         ナポレオン軍 {result.napoleonArmyCount}枚 / 宣言 {result.declaredCount}枚
         {shortage > 0 ? `（あと${shortage}枚足りませんでした）` : '（宣言を達成しました）'}
       </p>
+
+      <button type="button" className="restart-button" onClick={onRestart}>
+        もう一度遊ぶ
+      </button>
 
       <TableInfo view={view} />
 

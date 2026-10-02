@@ -76,7 +76,7 @@ export function GameScreen({ update, send }: GameScreenProps) {
       )
 
     case 'result':
-      return <ResultScreen update={update} />
+      return <ResultScreen update={update} onRestart={() => send({ type: 'startGame' })} />
 
     case 'dealing':
       return null
